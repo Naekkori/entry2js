@@ -135,8 +135,8 @@ function codeGen(ast) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
                 // 'when_click_start'에 대한 처리
-                if (node.eventName === "click_start") {
-                    generatedCode += `document.addEventListener('DOMContentLoaded', () => {\n`;
+                if (node.eventName === "run_button_click") {
+                    generatedCode += `document.addEventListener('start', () => {\n`;
                     // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
                     node.handlerBody.forEach(blockNode => {
                         generatedCode += `    // ${blockNode.type} 블록에 대한 코드\n`;
