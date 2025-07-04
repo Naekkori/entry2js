@@ -1,0 +1,23 @@
+{
+  "name": "entry2js",
+  "version": "1.0.0",
+  "description": "Entry Project to FastEntry javascript transpiler",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "Entry",
+    "BlockCode Converter"
+  ],
+  "author": "Naekkori",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^37.2.0"
+  },
+  "dependencies": {
+    "almond.css": "^1.2.2",
+    "tar": "^7.4.3"
+  }
+}
