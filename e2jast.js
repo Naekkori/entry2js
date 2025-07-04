@@ -110,7 +110,7 @@ function convertBlockToAstNode(block) {
                 }
                 // 중첩된 statement를 위한 별도 AST 노드 타입이 필요할 수 있습니다.
                 // 여기서는 임시로 Array로 감싸서 처리합니다.
-                astNode.statements.push(nestedStatements); 
+                astNode.statements.push(nestedStatements);
             } else if (stmtBlock && typeof stmtBlock.type === 'string') {
                 astNode.statements.push(convertBlockToAstNode(stmtBlock));
             }
@@ -135,19 +135,31 @@ function codeGen(ast) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
                 // 'when_click_start'에 대한 처리
-                if (node.eventName === "run_button_click") {
-                    generatedCode += `document.addEventListener('start', () => {\n`;
-                    // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
-                    node.handlerBody.forEach(blockNode => {
-                        generatedCode += `    // ${blockNode.type} 블록에 대한 코드\n`;
-                        // TODO: 실제 블록 타입에 따른 코드 생성 로직 추가
-                        // 예: if (blockNode.type === "move_direction") { generatedCode += `    move(${blockNode.arguments[0]});\n`; }
-                    });
-                    generatedCode += `});\n\n`;
-                }
-                // 다른 이벤트 핸들러에 대한 처리 (향후 추가)
-                else {
-                    generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
+                switch (node.eventName) {
+                    case "run_button_click":
+                        generatedCode += `document.addEventListener('start', () => {\n`;
+                        // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
+                        node.handlerBody.forEach(blockNode => {
+                            //generatedCode += `    // ${blockNode.type} 블록에 대한 코드\n`;
+                            generatedCode += recursive_stack(blockNode);
+                            // TODO: 실제 블록 타입에 따른 코드 생성 로직 추가
+                            // 예: if (blockNode.type === "move_direction") { generatedCode += `    move(${blockNode.arguments[0]});\n`; }
+                        });
+                        generatedCode += `});\n\n`;
+                        break;
+                    case "mouse_click":
+                        break;
+                    case "mouse_click_cancel":
+                        break;
+                    case "object_click":
+                        break;
+                    case "message_cast":
+                        break;
+                    case "scene_start":
+                        break;
+                    default:
+                        generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
+                        break;
                 }
             }
             // TODO: 다른 최상위 AST 노드 타입에 대한 처리 (예: 함수 정의 등)
@@ -156,8 +168,37 @@ function codeGen(ast) {
 
     return generatedCode;
 }
+function recursive_stack(EntryBlock) {
+    var code;
+    var params;
+    switch (EntryBlock.type) {
+        case "_if":
+            EntryBlock.params.forEach(param => { params += recursive_stack(param) });
+            code += `if (${params}) {\n`;
+            EntryBlock.statements[0].forEach(blockNode => {
+                code += recursive_stack(blockNode);
+            });
+            code += `}\n`;
+            break;
+        case "_else":
+            EntryBlock.params.forEach(param => { params += recursive_stack(param) });
+            code += `if (${params}) {\n`;
+                EntryBlock.statements[0].forEach(blockNode => {
+                    code += recursive_stack(blockNode);
+                });
+            code += `}else{\n`;
+                EntryBlock.statements[1].forEach(blockNode => {
+                    code += recursive_stack(blockNode);
+                });
+            code += `}\n`;
 
-// 테스트용 함수는 이제 buildAstFromScript를 호출하고 codeGen을 통해 결과를 반환합니다.
+            break;
+        default:
+            code = `// TODO: ${EntryBlock.type} 구현불가\n`
+            break;
+    }
+    return code;
+}
 function test_ast(entryScript) {
     const ast = buildAstFromScript(entryScript);
     return ast;
