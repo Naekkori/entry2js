@@ -2,6 +2,7 @@ import {app, ipcMain, dialog, BrowserWindow} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {extractPlayEntryProject} from "./extract.mjs";
+import Transpiler from "./transpiler.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,8 +29,8 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
 
     // 렌더러로 메시지를 보낼 때 사용할 webContents 객체
     const webContents = event.sender;
-    // 임시 폴더에 압축을 해제할 경로를 지정합니다.
-    const outputDir = path.join(app.getPath('temp'), `entry2js-extract-${Date.now()}`);
+    // 압축 해제할 디렉토리 경로
+    const outputDir = path.join(app.getPath('documents'), `entry2js-extract-${Date.now()}`);
 
     // 진행 상황 로그를 렌더러로 전송하는 콜백 함수
     const onProgress = (logMessage) => {
@@ -42,8 +43,8 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
         await extractPlayEntryProject(filePath, outputDir, onProgress);
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
-        // TODO: 여기에 실제 변환 로직을 추가
-
+        // TODO: 실제 변환프로세스
+        await Transpiler(path.join(outputDir, 'project.json'))
         onProgress('✅ 모든 작업이 성공적으로 완료되었습니다.');
         return { success: true, message: '변환 완료' };
     } catch (error) {
