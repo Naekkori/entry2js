@@ -160,7 +160,7 @@ function codeGen(ast) {
 // 테스트용 함수는 이제 buildAstFromScript를 호출하고 codeGen을 통해 결과를 반환합니다.
 function test_ast(entryScript) {
     const ast = buildAstFromScript(entryScript);
-    return codeGen(ast);
+    return ast;
 }
 
 export { codeGen, test_ast };
