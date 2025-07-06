@@ -46,6 +46,7 @@ function buildAstFromScript(entryScript) {
 
             const isStartBlock = firstBlock.type.startsWith('when_');
 
+
             if (isStartBlock) {
                 // 시작 블록이라면 EventHandler 노드를 생성합니다.
                 const eventName = firstBlock.type.replace('when_', ''); // 'when_click_start' -> 'click_start'
@@ -71,7 +72,14 @@ function buildAstFromScript(entryScript) {
                 programAst.body.push({
                     type: "EventHandler",
                     eventName: eventName,
-                    handlerBody: handlerBody
+                    // 시작 블록의 파라미터(예: 메시지 ID)를 arguments 속성으로 복사합니다.
+                    // convertBlockToAstNode를 사용하여 파라미터 내부의 블록도 재귀적으로 변환합니다.
+                    arguments:  (firstBlock.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
+                        (typeof param === 'object' && param !== null && param.type)
+                            ? convertBlockToAstNode(param)
+                            : param
+                    ),
+                    handlerBody: handlerBody,
                 });
             } else {
                 // 시작 블록이 아닌 경우 (예: 전역 변수 선언 등, 현재는 건너뜀)
@@ -91,7 +99,13 @@ function buildAstFromScript(entryScript) {
 function convertBlockToAstNode(block) {
     const astNode = {
         type: block.type, // 블록 타입 그대로 사용
-        arguments: block.param || [], // 'param'을 'arguments'로 변경 (더 일반적인 용어)
+        // params 배열을 순회하며, 각 파라미터가 블록(객체이며 type 속성을 가짐)이면
+        // 재귀적으로 변환하고, 리터럴 값이면 그대로 사용합니다.
+        arguments: (block.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
+            (typeof param === 'object' && param !== null && param.type)
+                ? convertBlockToAstNode(param)
+                : param
+        ),
         statements: [] // 기본적으로 비어있는 배열로 초기화
     };
 
@@ -130,32 +144,95 @@ function codeGen(ast) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER;
+/**
+ * FastEntry 엔진 이벤트 목록
+아래는 현재 엔진에서 사용할 수 있는 모든 이벤트의 목록과 설명, 그리고 JavaScript 핸들러로 전달되는 인자 정보입니다.
 
+이벤트 이름 (snake_case)	설명	전달되는 인자
+project_start	'시작하기' 버튼을 눌러 프로젝트가 시작될 때 발생합니다.	없음
+scene_start	씬이 시작되거나 변경될 때 발생합니다.	없음
+object_clicked	오브젝트를 마우스로 눌렀다가 같은 오브젝트 위에서 뗄 때 발생합니다.	objectId (string): 클릭된 오브젝트의 ID
+object_click_canceled	오브젝트를 누른 상태에서 포인터가 오브젝트 밖으로 나갔을 때 발생합니다.	없음
+key_pressed	키보드의 키를 눌렀을 때 발생합니다.	keyName (string): 눌린 키의 이름 (예: "a", "enter", "space")
+key_released	키보드의 키에서 손을 뗐을 때 발생합니다.	keyName (string): 떼어진 키의 이름
+mouse_down	마우스 버튼을 눌렀을 때 발생합니다. (오브젝트 위가 아니어도 발생)	없음
+mouse_up	마우스 버튼에서 손을 뗐을 때 발생합니다. (오브젝트 위가 아니어도 발생)	없음
+message_received	Entry.messageCast("메시지ID") 함수로 신호를 받았을 때 발생합니다.	messageId (string): 수신된 메시지의 ID
+clone_created	오브젝트가 복제되었을 때, 복제된 오브젝트 자신에게만 발생합니다.	없음
+ */
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
                 // 'when_click_start'에 대한 처리
                 switch (node.eventName) {
                     case "run_button_click":
-                        generatedCode += `document.addEventListener('start', () => {\n`;
+                        generatedCode += `Entry.on('project_start', () => {\n`;
                         // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
                         node.handlerBody.forEach(blockNode => {
-                            //generatedCode += `    // ${blockNode.type} 블록에 대한 코드\n`;
-                            generatedCode += recursive_stack(blockNode);
-                            // TODO: 실제 블록 타입에 따른 코드 생성 로직 추가
-                            // 예: if (blockNode.type === "move_direction") { generatedCode += `    move(${blockNode.arguments[0]});\n`; }
+                            // 각 최상위 블록을 Statement로 변환하고, 들여쓰기(4)를 적용합니다.
+                            generatedCode += generateStatement(blockNode, 4);
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "mouse_click":
+                        generatedCode += `Entry.on('mouse_down', () => {\n`;
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
                         break;
                     case "mouse_click_cancel":
+                        generatedCode += `Entry.on('mouse_up', () => {\n`;
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
                         break;
                     case "object_click":
+                        generatedCode += `Entry.on('object_click', (objectId) => {\n`;
+                        generatedCode += `  if(objectId === Entry.getId()){\n`
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `  }\n`;
+                        generatedCode += `});\n\n`;
                         break;
+                    case "object_click_canceled":
+                        generatedCode += `Entry.on('object_click_canceled', () => {\n`;
+                        // 이 이벤트는 특정 오브젝트에 국한되지 않으므로 if문 없이 모든 블록을 실행합니다.
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
+                        break; // Fall-through 버그 수정
                     case "message_cast":
+                        // 메시지 ID가 null이면 이벤트 핸들러를 생성하지 않습니다.
+                        if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
+                            generatedCode += `// INFO: 'when_message_cast' block with a null message ID was skipped.\n\n`;
+                            break;
+                        }
+                        generatedCode += `Entry.on('message_received', (messageId) => {\n`;
+                        generatedCode += `  if (messageId === ${generateExpression(node.arguments[0])}) {\n`;
+                        node.handlerBody.forEach(blockNode => {
+                            // if문 내부는 들여쓰기 4칸으로 생성합니다.
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `  }\n`; // if 문의 닫는 괄호를 루프 밖으로 이동하고 올바르게 들여쓰기합니다.
+                        generatedCode += `});\n\n`;
                         break;
                     case "scene_start":
+                        generatedCode += `Entry.on('scene_start', () => {\n`;
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
+                        break;
+                    case "clone_created":
+                        generatedCode += `Entry.on('clone_created', () => {\n`;
+                        node.handlerBody.forEach(blockNode=> {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
                         break;
                     default:
                         generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
@@ -168,36 +245,168 @@ function codeGen(ast) {
 
     return generatedCode;
 }
-function recursive_stack(EntryBlock) {
-    var code;
-    var params;
-    switch (EntryBlock.type) {
-        case "_if":
-            EntryBlock.params.forEach(param => { params += recursive_stack(param) });
-            code += `if (${params}) {\n`;
-            EntryBlock.statements[0].forEach(blockNode => {
-                code += recursive_stack(blockNode);
-            });
-            code += `}\n`;
-            break;
-        case "_else":
-            EntryBlock.params.forEach(param => { params += recursive_stack(param) });
-            code += `if (${params}) {\n`;
-                EntryBlock.statements[0].forEach(blockNode => {
-                    code += recursive_stack(blockNode);
-                });
-            code += `}else{\n`;
-                EntryBlock.statements[1].forEach(blockNode => {
-                    code += recursive_stack(blockNode);
-                });
-            code += `}\n`;
 
-            break;
+/**
+ * 엔트리의 연산자 문자열을 JavaScript 연산자로 변환합니다.
+ * @param {string} op - 엔트리 연산자 (예: "PLUS", "MINUS", "EQUAL")
+ * @returns {string} JavaScript 연산자 (예: "+", "-", "===")
+ */
+function mapOperator(op) {
+    const opMap = {
+        PLUS: '+', MINUS: '-', TIMES: '*', DIVIDE: '/',
+        EQUAL: '===', GREATER: '>', LESS: '<',
+        // TODO: 논리 연산자 추가
+        // AND: '&&', OR: '||'
+    };
+    return opMap[op] || op; // 맵에 없으면 원본 반환
+}
+
+
+/**
+ * AST 노드를 기반으로 하나의 JavaScript 구문(Statement)을 생성합니다.
+ * @param {object} node - 변환할 AST 노드
+ * @param {number} indent - 들여쓰기 레벨 (스페이스 수)
+ * @returns {string} 생성된 JavaScript 코드 라인
+ */
+function generateStatement(node, indent = 0) {
+    const prefix = ' '.repeat(indent);
+
+    // C++에 바인딩된 함수 이름과 엔트리 블록 타입을 매핑합니다.
+    switch (node.type) {
+        case 'move_direction': {
+            const distance = generateExpression(node.arguments[0]);
+            return `${prefix}Entry.moveDirection(${distance});\n`;
+        }
+
+        case 'message_cast': {
+            // 메시지 ID가 null이면 구문을 생성하지 않습니다.
+            if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
+                return `${prefix}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
+            }
+            const messageId = generateExpression(node.arguments[0]);
+            // C++에 바인딩된 함수 이름(messageCast)과 일치시킵니다.
+            return `${prefix}Entry.messageCast(${messageId});\n`;
+        }
+
+        case 'move_y': {
+            const y = generateExpression(node.arguments[0]);
+            return `${prefix}Entry.setY(Entry.getY() + ${y}); // move_y는 setY와 getY 조합으로 구현\n`;
+        }
+
+        case 'sound_start_sound': {
+            const soundId = generateExpression(node.arguments[0]);
+            return `${prefix}Entry.playSound(${soundId});\n`;
+        }
+
+        case '_if': {
+            const condition = generateExpression(node.arguments[0]);
+            let code = `${prefix}if ${condition} {\n`;
+            if (node.statements[0] && Array.isArray(node.statements[0])) {
+                node.statements[0].forEach(stmt => {
+                    code += generateStatement(stmt, indent + 4);
+                });
+            }
+            code += `${prefix}}\n`;
+            return code;
+        }
+
+        case 'if_else': { // if-else 블록
+            const condition = generateExpression(node.arguments[0]);
+            let code = `${prefix}if ${condition} {\n`;
+            node.statements[0]?.forEach(stmt => { // if 본문
+                code += generateStatement(stmt, indent + 4);
+            });
+            code += `${prefix}} else {\n`;
+            node.statements[1]?.forEach(stmt => { // else 본문
+                code += generateStatement(stmt, indent + 4);
+            });
+            code += `${prefix}}\n`;
+            return code;
+        }
+
+        case 'repeat_inf': {
+            let code = `${prefix}while (true) {\n`;
+            node.statements[0]?.forEach(stmt => {
+                code += generateStatement(stmt, indent + 4);
+            });
+            code += `${prefix}}\n`;
+            return code;
+        }
+
+        case 'repeat_basic': {
+            const count = generateExpression(node.arguments[0]);
+            let code = `${prefix}for (let i = 0; i < ${count}; i++) {\n`;
+            node.statements[0]?.forEach(stmt => { // 반복 본문
+                code += generateStatement(stmt, indent + 4);
+            });
+            code += `${prefix}}\n`;
+            return code;
+        }
+
+        case 'stop_repeat': { // '반복 중단하기' 블록
+            return `${prefix}break;\n`;
+        }
+
         default:
-            code = `// TODO: ${EntryBlock.type} 구현불가\n`
-            break;
+            return `${prefix}// TODO: Statement for '${node.type}' is not implemented.\n`;
     }
-    return code;
+}
+
+/**
+ * AST 노드 또는 리터럴 값을 JavaScript 표현식(Expression)으로 변환합니다.
+ * @param {object|string|number} arg - 변환할 인자 (AST 노드 또는 리터럴)
+ * @returns {string} 생성된 JavaScript 표현식
+ */
+function generateExpression(arg) {
+    // 인자가 블록(객체)이 아닌 리터럴 값일 경우
+    if (typeof arg !== 'object' || arg === null) {
+        // 값의 타입에 따라 처리: 문자열은 따옴표로 감싸고, 숫자는 그대로 둡니다.
+        if (typeof arg === 'string') {
+            return JSON.stringify(arg);
+        }
+        return String(arg);
+    }
+
+    // 인자가 값을 반환하는 블록일 경우
+    switch (arg.type) {
+        case 'text': return JSON.stringify(arg.arguments[0] || '');
+        case 'number': return String(arg.arguments[0] || 0);
+        // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
+        case 'True': return 'true';
+        case 'False': return 'false';
+
+        // 계산 블록 처리
+        case 'calc_basic': {
+            const left = generateExpression(arg.arguments[0]);
+            const op = mapOperator(arg.arguments[1]);
+            const right = generateExpression(arg.arguments[2]);
+            return `(${left} ${op} ${right})`;
+        }
+
+        // 판단 블록의 조건 부분 처리
+        case 'boolean_basic_operator': {
+            const left = generateExpression(arg.arguments[0]);
+            const op = mapOperator(arg.arguments[1]);
+            const right = generateExpression(arg.arguments[2]);
+            return `(${left} ${op} ${right})`;
+        }
+
+        // 좌표/크기 등 오브젝트의 속성값 블록 처리
+        case 'coordinate_object': {
+            // arg.arguments 예시: ["self","y"]
+            const target = arg.arguments[0];
+            const prop = arg.arguments[1];
+            if (target === 'self') { // '자신'의 속성값
+                if (prop === 'x') return `Entry.getX()`;
+                if (prop === 'y') return `Entry.getY()`;
+                if (prop === 'rotation') return `Entry.getRotation()`;
+                // TODO: size, direction 등 다른 속성 추가
+            }
+            return `/* TODO: coordinate_object for ${target}.${prop} */`;
+        }
+
+        default: return `/* TODO: Expression for '${arg.type}' */`;
+    }
 }
 function test_ast(entryScript) {
     const ast = buildAstFromScript(entryScript);

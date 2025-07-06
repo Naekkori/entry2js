@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.log": "Log",
+        "utility": "cpp"
+    }
+}
