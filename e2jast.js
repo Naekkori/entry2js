@@ -400,6 +400,9 @@ function generateExpression(arg) {
                 if (prop === 'x') return `Entry.getX()`;
                 if (prop === 'y') return `Entry.getY()`;
                 if (prop === 'rotation') return `Entry.getRotation()`;
+                if (prop === 'scale') return `Entry.getScale()`;
+                if (prop === 'direction') return `Entry.getDirection()`;
+                if (prop === 'size') return `Entry.getSize()`;
                 // TODO: size, direction 등 다른 속성 추가
             }
             return `/* TODO: coordinate_object for ${target}.${prop} */`;
