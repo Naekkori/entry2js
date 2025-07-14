@@ -23,7 +23,7 @@ This is the code that works in FastEntry
  * @param {string} entryScript - 파싱할 스크립트 JSON 문자열
  * @returns {object} - 생성된 AST (최상위 Program 노드)
  */
-function buildAstFromScript(entryScript) {
+function buildAstFromScript(entryScript) {    
     // 최상위 Program 노드를 생성합니다.
     const programAst = {
         type: "Program",
@@ -34,10 +34,19 @@ function buildAstFromScript(entryScript) {
         return programAst;
     }
 
+    if (!entryScript) {
+        return programAst;
+    }
+
     const scriptData = JSON.parse(entryScript);
 
     if (Array.isArray(scriptData)) {
-        for (const blockStack of scriptData) { // 바깥쪽 배열 순회 (블록 묶음)
+        try {
+            const scriptData = JSON.parse(entryScript);
+
+            if (!Array.isArray(scriptData)) return programAst;
+
+            for (const blockStack of scriptData) { // 바깥쪽 배열 순회 (블록 묶음)
             const firstBlock = blockStack[0];
 
             if (!firstBlock || typeof firstBlock.type !== 'string') {
@@ -85,6 +94,10 @@ function buildAstFromScript(entryScript) {
                 // 시작 블록이 아닌 경우 (예: 전역 변수 선언 등, 현재는 건너뜀)
                 // TODO: 여기에 시작 블록이 아닌 최상위 레벨 블록 처리를 추가할 수 있습니다.
             }
+        }
+        } catch (e) {
+            console.error("Failed to parse entry script JSON:", e);
+            // 파싱 실패 시 빈 Program 노드 반환
         }
     }
     return programAst;
@@ -144,22 +157,6 @@ function codeGen(ast) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER;
-/**
- * FastEntry 엔진 이벤트 목록
-아래는 현재 엔진에서 사용할 수 있는 모든 이벤트의 목록과 설명, 그리고 JavaScript 핸들러로 전달되는 인자 정보입니다.
-
-이벤트 이름 (snake_case)	설명	전달되는 인자
-project_start	'시작하기' 버튼을 눌러 프로젝트가 시작될 때 발생합니다.	없음
-scene_start	씬이 시작되거나 변경될 때 발생합니다.	없음
-object_clicked	오브젝트를 마우스로 눌렀다가 같은 오브젝트 위에서 뗄 때 발생합니다.	objectId (string): 클릭된 오브젝트의 ID
-object_click_canceled	오브젝트를 누른 상태에서 포인터가 오브젝트 밖으로 나갔을 때 발생합니다.	없음
-key_pressed	키보드의 키를 눌렀을 때 발생합니다.	keyName (string): 눌린 키의 이름 (예: "a", "enter", "space")
-key_released	키보드의 키에서 손을 뗐을 때 발생합니다.	keyName (string): 떼어진 키의 이름
-mouse_down	마우스 버튼을 눌렀을 때 발생합니다. (오브젝트 위가 아니어도 발생)	없음
-mouse_up	마우스 버튼에서 손을 뗐을 때 발생합니다. (오브젝트 위가 아니어도 발생)	없음
-message_received	Entry.messageCast("메시지ID") 함수로 신호를 받았을 때 발생합니다.	messageId (string): 수신된 메시지의 ID
-clone_created	오브젝트가 복제되었을 때, 복제된 오브젝트 자신에게만 발생합니다.	없음
- */
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
@@ -168,7 +165,7 @@ clone_created	오브젝트가 복제되었을 때, 복제된 오브젝트 자신
                     case "run_button_click":
                         generatedCode += `Entry.on('project_start', () => {\n`;
                         // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
-                        node.handlerBody.forEach(blockNode => {
+                        node.handlerBody.forEach(blockNode => {                            
                             // 각 최상위 블록을 Statement로 변환하고, 들여쓰기(4)를 적용합니다.
                             generatedCode += generateStatement(blockNode, 4);
                         });
@@ -176,28 +173,28 @@ clone_created	오브젝트가 복제되었을 때, 복제된 오브젝트 자신
                         break;
                     case "mouse_click":
                         generatedCode += `Entry.on('mouse_down', () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
+                        node.handlerBody.forEach(blockNode => {                            
+                            generatedCode += generateStatement(blockNode, 4);                            
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "mouse_click_cancel":
                         generatedCode += `Entry.on('mouse_up', () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
+                        node.handlerBody.forEach(blockNode => {                            
+                            generatedCode += generateStatement(blockNode, 4);                            
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "object_click":
                         generatedCode += `Entry.on('object_click', (objectId) => {\n`;
                         generatedCode += `  if(objectId === Entry.getId()){\n`
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
+                        node.handlerBody.forEach(blockNode => {                            
+                            generatedCode += generateStatement(blockNode, 4);                            
                         });
                         generatedCode += `  }\n`;
                         generatedCode += `});\n\n`;
                         break;
-                    case "object_click_canceled":
+                    case "object_click_canceled":                        
                         generatedCode += `Entry.on('object_click_canceled', () => {\n`;
                         // 이 이벤트는 특정 오브젝트에 국한되지 않으므로 if문 없이 모든 블록을 실행합니다.
                         node.handlerBody.forEach(blockNode => {
@@ -213,22 +210,22 @@ clone_created	오브젝트가 복제되었을 때, 복제된 오브젝트 자신
                         }
                         generatedCode += `Entry.on('message_received', (messageId) => {\n`;
                         generatedCode += `  if (messageId === ${generateExpression(node.arguments[0])}) {\n`;
-                        node.handlerBody.forEach(blockNode => {
+                        node.handlerBody.forEach(blockNode => {                            
                             // if문 내부는 들여쓰기 4칸으로 생성합니다.
-                            generatedCode += generateStatement(blockNode, 4);
+                            generatedCode += generateStatement(blockNode, 4);                            
                         });
                         generatedCode += `  }\n`; // if 문의 닫는 괄호를 루프 밖으로 이동하고 올바르게 들여쓰기합니다.
                         generatedCode += `});\n\n`;
                         break;
                     case "scene_start":
                         generatedCode += `Entry.on('scene_start', () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
+                        node.handlerBody.forEach(blockNode => {                            
+                            generatedCode += generateStatement(blockNode, 4);                            
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "clone_created":
-                        generatedCode += `Entry.on('clone_created', () => {\n`;
+                        generatedCode += `Entry.on('clone_created', () => {\n`;                        
                         node.handlerBody.forEach(blockNode=> {
                             generatedCode += generateStatement(blockNode, 4);
                         });
@@ -268,88 +265,74 @@ function mapOperator(op) {
  * @param {number} indent - 들여쓰기 레벨 (스페이스 수)
  * @returns {string} 생성된 JavaScript 코드 라인
  */
-function generateStatement(node, indent = 0) {
-    const prefix = ' '.repeat(indent);
 
-    // C++에 바인딩된 함수 이름과 엔트리 블록 타입을 매핑합니다.
-    switch (node.type) {
-        case 'move_direction': {
-            const distance = generateExpression(node.arguments[0]);
-            return `${prefix}Entry.moveDirection(${distance});\n`;
+const statementGenerators = {
+    'move_direction': (node, indent) => {
+        const distance = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.moveDirection(${distance});\n`;
+    },
+    'message_cast': (node, indent) => {
+        if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
+            return `${' '.repeat(indent)}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
         }
-
-        case 'message_cast': {
-            // 메시지 ID가 null이면 구문을 생성하지 않습니다.
-            if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
-                return `${prefix}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
-            }
-            const messageId = generateExpression(node.arguments[0]);
-            // C++에 바인딩된 함수 이름(messageCast)과 일치시킵니다.
-            return `${prefix}Entry.messageCast(${messageId});\n`;
-        }
-
-        case 'move_y': {
-            const y = generateExpression(node.arguments[0]);
-            return `${prefix}Entry.setY(Entry.getY() + ${y}); // move_y는 setY와 getY 조합으로 구현\n`;
-        }
-
-        case 'sound_start_sound': {
-            const soundId = generateExpression(node.arguments[0]);
-            return `${prefix}Entry.playSound(${soundId});\n`;
-        }
-
-        case '_if': {
-            const condition = generateExpression(node.arguments[0]);
-            let code = `${prefix}if ${condition} {\n`;
-            if (node.statements[0] && Array.isArray(node.statements[0])) {
-                node.statements[0].forEach(stmt => {
-                    code += generateStatement(stmt, indent + 4);
-                });
-            }
-            code += `${prefix}}\n`;
-            return code;
-        }
-
-        case 'if_else': { // if-else 블록
-            const condition = generateExpression(node.arguments[0]);
-            let code = `${prefix}if ${condition} {\n`;
-            node.statements[0]?.forEach(stmt => { // if 본문
-                code += generateStatement(stmt, indent + 4);
-            });
-            code += `${prefix}} else {\n`;
-            node.statements[1]?.forEach(stmt => { // else 본문
-                code += generateStatement(stmt, indent + 4);
-            });
-            code += `${prefix}}\n`;
-            return code;
-        }
-
-        case 'repeat_inf': {
-            let code = `${prefix}while (true) {\n`;
-            node.statements[0]?.forEach(stmt => {
-                code += generateStatement(stmt, indent + 4);
-            });
-            code += `${prefix}}\n`;
-            return code;
-        }
-
-        case 'repeat_basic': {
-            const count = generateExpression(node.arguments[0]);
-            let code = `${prefix}for (let i = 0; i < ${count}; i++) {\n`;
-            node.statements[0]?.forEach(stmt => { // 반복 본문
-                code += generateStatement(stmt, indent + 4);
-            });
-            code += `${prefix}}\n`;
-            return code;
-        }
-
-        case 'stop_repeat': { // '반복 중단하기' 블록
-            return `${prefix}break;\n`;
-        }
-
-        default:
-            return `${prefix}// TODO: Statement for '${node.type}' is not implemented.\n`;
+        const messageId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.messageCast(${messageId});\n`;
+    },
+    'move_y': (node, indent) => {
+        const y = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
+    },
+    'sound_start_sound': (node, indent) => {
+        const soundId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.playSound(${soundId});\n`;
+    },
+    '_if': (node, indent) => {
+        const condition = generateExpression(node.arguments[0]);
+        let code = `${' '.repeat(indent)}if (${condition}) {\n`;
+        node.statements[0]?.forEach(stmt => {
+            code += generateStatement(stmt, indent + 4);
+        });
+        code += `${' '.repeat(indent)}}\n`;
+        return code;
+    },
+    'if_else': (node, indent) => {
+        const condition = generateExpression(node.arguments[0]);
+        let code = `${' '.repeat(indent)}if (${condition}) {\n`;
+        node.statements[0]?.forEach(stmt => {
+            code += generateStatement(stmt, indent + 4);
+        });
+        code += `${' '.repeat(indent)}} else {\n`;
+        node.statements[1]?.forEach(stmt => {
+            code += generateStatement(stmt, indent + 4);
+        });
+        code += `${' '.repeat(indent)}}\n`;
+        return code;
+    },
+    'repeat_inf': (node, indent) => {
+        let code = `${' '.repeat(indent)}while (true) {\n`;
+        node.statements[0]?.forEach(stmt => {
+            code += generateStatement(stmt, indent + 4);
+        });
+        code += `${' '.repeat(indent)}}\n`;
+        return code;
+    },
+    'repeat_basic': (node, indent) => {
+        const count = generateExpression(node.arguments[0]);
+        let code = `${' '.repeat(indent)}for (let i = 0; i < ${count}; i++) {\n`;
+        node.statements[0]?.forEach(stmt => {
+            code += generateStatement(stmt, indent + 4);
+        });
+        code += `${' '.repeat(indent)}}\n`;
+        return code;
+    },
+    'stop_repeat': (node, indent) => {
+        return `${' '.repeat(indent)}break;\n`;
     }
+};
+
+function generateStatement(node, indent = 0) {
+    const generator = statementGenerators[node.type];
+    return generator ? generator(node, indent) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
 }
 
 /**
