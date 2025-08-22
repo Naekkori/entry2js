@@ -15,7 +15,7 @@ const HEADER = `
 CodeGenerator ${pkg.version} by ${pkg.author}
 For advanced users
 If you know what this code is doing, I recommend modifying it.
-This is the code that works in FastEntry
+This is code that works in FastEntry
 */
 `;
 
