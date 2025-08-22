@@ -1,4 +1,5 @@
 import fs from "fs";
+import { v4 as uuidv4 } from 'uuid';
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 const HEADER = `
@@ -17,6 +18,20 @@ If you know what this code is doing, I recommend modifying it.
 This is the code that works in FastEntry
 */
 `;
+
+// Helper to create a valid JS identifier from Entry IDs
+function toJsId(id) {
+    if (!id) return `invalid_id_${uuidv4().replace(/-/g, '')}`;
+    return `var_${id.replace(/[^\w]/g, '_')}`;
+}
+
+// Helper to get parameter name from its definition block
+function getParamName(paramBlock) {
+    // Parameters are identified by their unique block type, which is a hash.
+    // e.g., function_param_string_abc123
+    return toJsId(paramBlock.type);
+}
+
 
 /**
  * 엔트리 스크립트 JSON 문자열을 받아 AST(추상 구문 트리)를 생성합니다.
@@ -53,7 +68,10 @@ function buildAstFromScript(entryScript) {
                 continue; // 유효하지 않은 블록 스택은 건너뜁니다.
             }
 
-            const isStartBlock = firstBlock.type.startsWith('when_');
+            const isStartBlock = firstBlock.type.startsWith('when_') || firstBlock.type.startsWith('message_cast_');
+            const isFunctionDefinition = firstBlock.type === 'function_create' || firstBlock.type === 'function_create_value';
+
+
 
 
             if (isStartBlock) {
@@ -91,8 +109,40 @@ function buildAstFromScript(entryScript) {
                     handlerBody: handlerBody,
                 });
             } else {
-                // 시작 블록이 아닌 경우 (예: 전역 변수 선언 등, 현재는 건너뜀)
-                // TODO: 여기에 시작 블록이 아닌 최상위 레벨 블록 처리를 추가할 수 있습니다.
+                // 함수 정의 블록 처리
+                if (isFunctionDefinition) {
+                    const funcId = firstBlock.id;
+                    const params = [];
+                    let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
+
+                    // 파라미터 체인 순회 (function_field_label -> function_field_string -> ...)
+                    while (currentParamBlock && currentParamBlock.params && currentParamBlock.params[1] && currentParamBlock.params[1].value) {
+                        currentParamBlock = currentParamBlock.params[1].value; // 다음 파라미터 블록으로 이동
+                        if (currentParamBlock.type.startsWith('function_field_')) {
+                             // 파라미터 블록의 고유 타입(ID)을 이름으로 사용
+                            params.push(getParamName(currentParamBlock.params[0].value));
+                        }
+                    }
+
+                    const funcBody = [];
+                    const statements = firstBlock.statements?.[0] || [];
+                    for (const block of statements) {
+                        if (block && typeof block.type === 'string') {
+                            funcBody.push(convertBlockToAstNode(block));
+                        }
+                    }
+
+                    // 함수 정의 노드를 AST에 추가
+                    programAst.body.push({
+                        type: "FunctionDefinition",
+                        id: funcId,
+                        is_value_returning: firstBlock.type === 'function_create_value',
+                        params: params,
+                        body: funcBody,
+                        // 로컬 변수 선언을 위해 함수 본문을 미리 스캔
+                        localVariables: findLocalVariables(funcBody)
+                    });
+                }
             }
         }
         } catch (e) {
@@ -103,6 +153,23 @@ function buildAstFromScript(entryScript) {
     return programAst;
 }
 
+function findLocalVariables(body) {
+    const localVars = new Set();
+    function traverse(nodes) {
+        if (!nodes) return;
+        for (const node of nodes) {
+            if (node.type === 'set_func_variable' || node.type === 'get_func_variable') {
+                // The variable ID is the first argument
+                if (node.arguments && node.arguments[0]) {
+                    localVars.add(toJsId(node.arguments[0]));
+                }
+            }
+            if (node.statements) node.statements.forEach(traverse);
+        }
+    }
+    traverse(body);
+    return Array.from(localVars);
+}
 /**
  * 단일 엔트리 블록 객체를 해당 AST 노드로 변환합니다.
  * 이 함수는 재귀적으로 `statements` 배열을 처리할 수 있습니다.
@@ -110,6 +177,8 @@ function buildAstFromScript(entryScript) {
  * @returns {object} - 변환된 AST 노드
  */
 function convertBlockToAstNode(block) {
+    // Copy funcId if it exists (for function call blocks). It's often in block.data.
+    const funcId = block.funcId || (block.data ? block.data.funcId : undefined);
     const astNode = {
         type: block.type, // 블록 타입 그대로 사용
         // params 배열을 순회하며, 각 파라미터가 블록(객체이며 type 속성을 가짐)이면
@@ -121,6 +190,10 @@ function convertBlockToAstNode(block) {
         ),
         statements: [] // 기본적으로 비어있는 배열로 초기화
     };
+
+    if (funcId) {
+        astNode.funcId = funcId;
+    }
 
     // 'statements'가 존재하고 배열인 경우, 재귀적으로 처리합니다.
     if (block.statements && Array.isArray(block.statements)) {
@@ -157,6 +230,24 @@ function codeGen(ast) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER;
+    // 함수를 먼저 정의합니다.
+    if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
+        ast.body.forEach(node => {
+            if (node.type === "FunctionDefinition") {
+                const funcName = `func_${node.id}`;
+                const params = node.params.join(', ');
+                generatedCode += `async function ${funcName}(${params}) {\n`;
+                // 로컬 변수 선언
+                if (node.localVariables.length > 0) {
+                    generatedCode += `    let ${node.localVariables.join(', ')};\n`;
+                }
+                node.body.forEach(blockNode => {
+                    generatedCode += generateStatement(blockNode, 4);
+                });
+                generatedCode += `}\n\n`;
+            }
+        });
+    }
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
@@ -236,7 +327,7 @@ function codeGen(ast) {
                         break;
                 }
             }
-            // TODO: 다른 최상위 AST 노드 타입에 대한 처리 (예: 함수 정의 등)
+            // FunctionDefinition은 이미 위에서 처리했으므로 여기서는 건너뜁니다.
         });
     }
 
@@ -327,6 +418,16 @@ const statementGenerators = {
     },
     'stop_repeat': (node, indent) => {
         return `${' '.repeat(indent)}break;\n`;
+    },
+    'set_func_variable': (node, indent) => {
+        const varName = toJsId(node.arguments[0]);
+        const value = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}${varName} = ${value};\n`;
+    },
+    'function_general': (node, indent) => {
+        const funcName = `func_${node.funcId}`;
+        const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
+        return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
     }
 };
 
@@ -389,6 +490,21 @@ function generateExpression(arg) {
                 // TODO: size, direction 등 다른 속성 추가
             }
             return `/* TODO: coordinate_object for ${target}.${prop} */`;
+        }
+
+        // Function-related expressions
+        case 'get_func_variable': {
+            return toJsId(arg.arguments[0]);
+        }
+        case 'function_value': {
+            const funcName = `func_${arg.funcId}`;
+            const args = arg.arguments.map(a => generateExpression(a)).join(', ');
+            return `await ${funcName}(${args})`;
+        }
+        case 'function_param_string':
+        case 'function_param_boolean': {
+            // The param name is derived from its unique block type
+            return getParamName(arg);
         }
 
         default: return `/* TODO: Expression for '${arg.type}' */`;
