@@ -369,6 +369,10 @@ const statementGenerators = {
         const messageId = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.messageCast(${messageId});\n`;
     },
+    'move_x': (node, indent) => {
+        const x = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setX(Entry.getX() + ${x});\n`;
+    },
     'move_y': (node, indent) => {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
