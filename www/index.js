@@ -50,6 +50,7 @@ document.body.addEventListener("click", async (event) => {
 
         // UI를 '처리 중' 상태로 변경
         appContainer.innerHTML = processingPage;
+        document.getElementsByTagName('h1')[0].innerHTML="변환중 입니다...";
 
         // 메인 프로세스로부터 오는 로그를 수신하여 화면에 표시
         window.electronAPI.onProcessLog(addLog);
@@ -59,6 +60,7 @@ document.body.addEventListener("click", async (event) => {
 
         // 변환 완료 후 '처음으로' 버튼 표시
         document.getElementById('back-to-home').style.display = 'block';
+        document.getElementsByTagName('h1')[0].innerHTML="변환 완료";
 
     } else if (targetId === 'back-to-home') {
         // 처음 화면으로 돌아가기

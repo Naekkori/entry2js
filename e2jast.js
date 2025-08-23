@@ -254,7 +254,7 @@ function codeGen(ast) {
                 // 'when_click_start'에 대한 처리
                 switch (node.eventName) {
                     case "run_button_click":
-                        generatedCode += `Entry.on('project_start', () => {\n`;
+                        generatedCode += `Entry.on('project_start', async () => {\n`;
                         // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
                         node.handlerBody.forEach(blockNode => {
                             // 각 최상위 블록을 Statement로 변환하고, 들여쓰기(4)를 적용합니다.
@@ -263,21 +263,21 @@ function codeGen(ast) {
                         generatedCode += `});\n\n`;
                         break;
                     case "mouse_click":
-                        generatedCode += `Entry.on('mouse_down', () => {\n`;
+                        generatedCode += `Entry.on('mouse_down', async () => {\n`;
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "mouse_click_cancel":
-                        generatedCode += `Entry.on('mouse_up', () => {\n`;
+                        generatedCode += `Entry.on('mouse_up', async () => {\n`;
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "object_click":
-                        generatedCode += `Entry.on('object_click', (objectId) => {\n`;
+                        generatedCode += `Entry.on('object_click', async (objectId) => {\n`;
                         generatedCode += `  if(objectId === Entry.getId()){\n`
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
@@ -286,7 +286,7 @@ function codeGen(ast) {
                         generatedCode += `});\n\n`;
                         break;
                     case "object_click_canceled":
-                        generatedCode += `Entry.on('object_click_canceled', () => {\n`;
+                        generatedCode += `Entry.on('object_click_canceled', async () => {\n`;
                         // 이 이벤트는 특정 오브젝트에 국한되지 않으므로 if문 없이 모든 블록을 실행합니다.
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
@@ -299,7 +299,7 @@ function codeGen(ast) {
                             generatedCode += `// INFO: 'when_message_cast' block with a null message ID was skipped.\n\n`;
                             break;
                         }
-                        generatedCode += `Entry.on('message_received', (messageId) => {\n`;
+                        generatedCode += `Entry.on('message_received', async (messageId) => {\n`;
                         generatedCode += `  if (messageId === ${generateExpression(node.arguments[0])}) {\n`;
                         node.handlerBody.forEach(blockNode => {
                             // if문 내부는 들여쓰기 4칸으로 생성합니다.
@@ -309,14 +309,14 @@ function codeGen(ast) {
                         generatedCode += `});\n\n`;
                         break;
                     case "scene_start":
-                        generatedCode += `Entry.on('scene_start', () => {\n`;
+                        generatedCode += `Entry.on('scene_start', async () => {\n`;
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
                         });
                         generatedCode += `});\n\n`;
                         break;
                     case "clone_created":
-                        generatedCode += `Entry.on('clone_created', () => {\n`;
+                        generatedCode += `Entry.on('clone_created', async () => {\n`;
                         node.handlerBody.forEach(blockNode => {
                             generatedCode += generateStatement(blockNode, 4);
                         });
@@ -358,95 +358,99 @@ function mapOperator(op) {
  */
 
 const statementGenerators = {
-    'move_direction': (node, indent) => {
+    'move_direction': (node, indent, context) => {
         const distance = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.moveDirection(${distance});\n`;
     },
-    'message_cast': (node, indent) => {
+    'message_cast': (node, indent, context) => {
         if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
             return `${' '.repeat(indent)}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
         }
         const messageId = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.messageCast(${messageId});\n`;
+        return `${' '.repeat(indent)}Entry.messageCast("${messageId}");\n`;
     },
-    'move_x': (node, indent) => {
+    'move_x': (node, indent, context) => {
         const x = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setX(Entry.getX() + ${x});\n`;
     },
-    'move_y': (node, indent) => {
+    'move_y': (node, indent, context) => {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
     },
-    'sound_start_sound': (node, indent) => {
+    'sound_start_sound': (node, indent, context) => {
         const soundId = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.playSound(${soundId});\n`;
     },
-    '_if': (node, indent) => {
+    '_if': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}if (${condition}) {\n`;
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, context);
         });
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
-    'if_else': (node, indent) => {
+    'if_else': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}if (${condition}) {\n`;
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, context);
         });
         code += `${' '.repeat(indent)}} else {\n`;
         node.statements[1]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, context);
         });
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
-    'repeat_inf': (node, indent) => {
+    'repeat_inf': (node, indent, context) => {
         let code = `${' '.repeat(indent)}while (true) {\n`;
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, context);
         });
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
-    'repeat_basic': (node, indent) => {
+    'repeat_basic': (node, indent, context) => {
+        const loopLevel = context.loopLevel || 0;
+        const loopVars = ['i', 'j', 'k'];
+        const loopVar = loopVars[loopLevel] || `loop_var_${loopLevel}`;
+        const newContext = { ...context, loopLevel: loopLevel + 1 };
         const count = generateExpression(node.arguments[0]);
-        let code = `${' '.repeat(indent)}for (let i = 0; i < ${count}; i++) {\n`;
+        let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, newContext);
         });
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
-    'repeat_while_true': (node, indent) => {
+    'repeat_while_true': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}while (${condition}) {\n`;
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4);
+            code += generateStatement(stmt, indent + 4, context);
         });
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
-    'stop_repeat': (node, indent) => {
+    'stop_repeat': (node, indent, context) => {
         return `${' '.repeat(indent)}break;\n`;
     },
-    'set_func_variable': (node, indent) => {
+    'set_func_variable': (node, indent, context) => {
         const varName = toJsId(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     },
-    'function_general': (node, indent) => {
+    'function_general': (node, indent, context) => {
         const funcName = `func_${node.funcId}`;
         const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
         return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
     }
 };
 
-function generateStatement(node, indent = 0) {
+function generateStatement(node, indent = 0, context = {}) {
     const generator = statementGenerators[node.type];
-    return generator ? generator(node, indent) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
+    return generator ? generator(node, indent, context) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
 }
 
 /**
@@ -493,7 +497,7 @@ function generateExpression(arg) {
             // arg.arguments 예시: ["self","y"]
             const target = arg.arguments[0];
             const prop = arg.arguments[1];
-            return `Entry.getObjectCoords(${target}, ${prop})`
+            return `Entry.getObjectCoords("${target}"," ${prop}")`
         }
         case 'get_date': {
             const selectAction = generateExpression(arg.arguments[0]);
