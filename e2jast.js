@@ -552,7 +552,7 @@ function generateExpression(arg) {
         }
         case 'get_variable':{
             const varid = generateExpression(arg.arguments[0]);
-            return `Entry.getVariable("${varid}")`;
+            return `Entry.getVariable(${varid})`;
         }
         case 'function_param_string':
         case 'function_param_boolean': {
