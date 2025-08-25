@@ -1,4 +1,4 @@
-import {app, ipcMain, dialog, BrowserWindow} from 'electron';
+import {app, ipcMain, dialog, BrowserWindow,shell} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {extractPlayEntryProject} from "./extract.mjs";
@@ -46,6 +46,7 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
         // TODO: 실제 변환프로세스
         await Transpiler(path.join(outputDir, 'project.json'))
         onProgress('✅ 모든 작업이 성공적으로 완료되었습니다.');
+        shell.showItemInFolder(outputDir);
         return { success: true, message: '변환 완료' };
     } catch (error) {
         console.error('변환 중 오류 발생:', error);
@@ -91,8 +92,6 @@ app.whenReady().then(() => {
 
 // 모든 창이 닫혔을 때 앱을 종료합니다. (Windows & Linux)
 app.on('window-all-closed', () => {
-    // macOS가 아닌 경우(darwin)에만 앱을 종료합니다.
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+    // 모든 플랫폼에서 창이 닫히면 앱을 종료합니다.
+    app.quit();
 });

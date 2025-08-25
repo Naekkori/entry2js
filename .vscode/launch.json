@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Electron: Main Process",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+      "program": "${workspaceFolder}/app.js",
+      "env": { "NODE_ENV": "development" },
+      "outputCapture": "std",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Electron: Renderer Process",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "timeout": 10000,
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Electron: All",
+      "configurations": ["Electron: Main Process", "Electron: Renderer Process"]
+    }
+  ]
+}

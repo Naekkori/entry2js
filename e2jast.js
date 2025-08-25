@@ -366,8 +366,8 @@ const statementGenerators = {
         if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
             return `${' '.repeat(indent)}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
         }
-        const messageId = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.messageCast("${messageId}");\n`;
+        const messageIdExpr = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.messageCast(${messageIdExpr});\n`;
     },
     'move_x': (node, indent, context) => {
         const x = generateExpression(node.arguments[0]);
@@ -441,10 +441,24 @@ const statementGenerators = {
         const value = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     },
+    'wait_until_true': (node, indent, context) => {
+        const condition = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}await Entry.waitUntilTrue(() => ${condition});\n`;
+    },
     'function_general': (node, indent, context) => {
         const funcName = `func_${node.funcId}`;
         const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
         return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
+    },
+    'set_variable': (node, indent, context) => {
+        const varid = generateExpression(node.arguments[0]);
+        const value = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.setVariable("${varid}", ${value});\n`;
+    },
+    'change_variable': (node,indent,context)=>{
+        const varid = generateExpression(node.arguments[0]);
+        const value = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.changeVariable("${varid}", ${value});\n`;
     }
 };
 
@@ -470,7 +484,16 @@ function generateExpression(arg) {
 
     // 인자가 값을 반환하는 블록일 경우
     switch (arg.type) {
-        case 'text': return JSON.stringify(arg.arguments[0] || '');
+        case 'text': {
+            const textValue = arg.arguments[0] || '';
+            // isFinite는 공백 문자열을 0으로 취급하므로, 비어있지 않은지 확인합니다.
+            // 또한, isFinite는 " 123 "과 같은 공백이 있는 숫자도 true로 반환합니다.
+            // JavaScript의 자동 타입 변환과 일치하므로 이 동작은 괜찮습니다.
+            if (textValue.trim() !== '' && isFinite(textValue)) {
+                return textValue; // 숫자와 유사한 문자열은 숫자 리터럴로 반환
+            }
+            return JSON.stringify(textValue); // 그 외에는 문자열 리터럴로 반환
+        }
         case 'number': return String(arg.arguments[0] || 0);
         // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
         case 'True': return 'true';
@@ -497,7 +520,7 @@ function generateExpression(arg) {
             // arg.arguments 예시: ["self","y"]
             const target = arg.arguments[0];
             const prop = arg.arguments[1];
-            return `Entry.getObjectCoords("${target}"," ${prop}")`
+            return `Entry.getObjectCoords("${target}", "${prop}")`
         }
         case 'get_date': {
             const selectAction = generateExpression(arg.arguments[0]);
@@ -527,6 +550,10 @@ function generateExpression(arg) {
             const max = generateExpression(arg.arguments[1]);
             return `Math.floor(Math.random() * (${max} - ${min} + 1)) + ${min}`;
         }
+        case 'get_variable':{
+            const varid = generateExpression(arg.arguments[0]);
+            return `Entry.getVariable("${varid}")`;
+        }
         case 'function_param_string':
         case 'function_param_boolean': {
             // The param name is derived from its unique block type
@@ -534,6 +561,23 @@ function generateExpression(arg) {
         }
 
         default: return `/* TODO: Expression for '${arg.type}' */`;
+    }
+}
+/**
+ * @brief 문자열 타입체크 및 변환.
+ * @param {*} value 
+ * @returns converted value
+ */
+function TypeOfString(value){
+    switch (typeof value) {
+        case 'string':
+            return `"${value}"`;
+        case `boolean`:
+            return value ? `true` : `false`;
+        case 'number':
+            return value;
+        default:
+            return `/* Unknow */`
     }
 }
 function test_ast(entryScript) {
