@@ -1,2 +1,99 @@
-# entry2js
-Entryproject to FastEntry Javascript Transpiler
+### 엔트리 블록 AST 구현 상태
+
+#### 시작
+- [x] `when_run_button_click` (시작하기 버튼을 클릭했을 때)
+- [x] `when_mouse_click` (마우스를 클릭했을 때)
+- [x] `when_mouse_click_cancel` (마우스 클릭을 해제했을 때)
+- [x] `when_object_click` (오브젝트를 클릭했을 때)
+- [x] `when_object_click_canceled` (오브젝트 클릭을 해제했을 때)
+- [x] `when_message_cast` (신호를 받았을 때)
+- [x] `when_scene_start` (장면이 시작되었을 때)
+- [x] `when_clone_created` (복제본이 처음 생성되었을 때)
+- [x] `when_some_key_pressed` (키보드를 눌렀을 때)
+
+#### 흐름
+- [x] `_if` (만일 ~이라면)
+- [x] `if_else` (만일 ~이라면, 아니면)
+- [x] `repeat_inf` (계속 반복하기)
+- [x] `repeat_basic` (번 반복하기)
+- [x] `repeat_while_true` (~이 될 때까지 반복하기)
+- [x] `stop_repeat` (반복 중단하기)
+- [x] `wait_seconds` (초 기다리기)
+- [x] `wait_until_true` (~이 될 때까지 기다리기)
+- [x] `start_scene` (장면 시작하기)
+- [x] `start_neighbor_scene` (다음/이전 장면 시작하기)
+- [x] `create_clone` (자신의 복제본 만들기)
+- [X] `delete_clone` (이 복제본 삭제하기)
+- [x] `stop_object` (자신 또는 다른 오브젝트의 코드 멈추기)
+
+#### 움직임
+- [x] `move_direction` (이동 방향으로 ~만큼 움직이기)
+- [x] `move_x` (x좌표를 ~만큼 바꾸기)
+- [x] `move_y` (y좌표를 ~만큼 바꾸기)
+- [x] `move_xy_time` (~초 동안 x, y 위치로 이동하기)
+- [x] `locate_xy_time` (~초 동안 x, y 위치로 이동하기 - `move_xy_time`과 동일하게 처리됨)
+- [x] `rotate_relative` (이동 방향을 ~만큼 회전하기)
+- [x] `direction_relative` (이동 방향을 ~만큼 회전하기 - `rotate_relative`와 동일하게 처리됨)
+- [x] `rotate_by_time` (~초 동안 ~만큼 회전하기)
+- [x] `direction_relative_duration` (~초 동안 ~만큼 회전하기 - `rotate_by_time`과 동일하게 처리됨)
+- [x] `direction_absolute` (이동 방향을 ~로 정하기)
+- [x] `see_angle_object` (~쪽 보기)
+- [x] `move_to_angle` (이동 방향으로 ~만큼 움직이기)
+- [ ] `locate` (x, y 위치로 이동하기)
+- [ ] `bounce_wall` (화면 끝에 닿으면 튕기기)
+
+#### 생김새
+- [ ] `dialog` (말하기)
+- [ ] `remove_dialog` (말풍선 지우기)
+- [ ] `change_shape` (모양 바꾸기)
+- [ ] `change_effect_amount` (색깔/밝기 등 효과를 ~만큼 주기)
+- [ ] `clear_effects` (모든 효과 지우기)
+- [ ] `change_size` (크기를 ~만큼 바꾸기)
+- [ ] `set_size` (크기를 ~로 정하기)
+- [ ] `flip_x` (좌우 모양 뒤집기)
+- [ ] `flip_y` (상하 모양 뒤집기)
+
+#### 소리
+- [x] `sound_start_sound` (소리 재생하기)
+- [ ] `sound_start_with_option` (~초 재생하기)
+- [ ] `sound_stop_all` (모든 소리 끄기)
+- [ ] `change_volume` (소리 크기를 ~만큼 바꾸기)
+- [ ] `set_volume` (소리 크기를 ~로 정하기)
+
+#### 판단
+- [x] `boolean_basic_operator` (~은 ~이다)
+- [ ] `reach_something` (~에 닿았는가?)
+- [ ] `is_clicked` (마우스를 클릭했는가?)
+- [ ] `is_object_clicked` (오브젝트를 클릭했는가?)
+
+#### 계산
+- [x] `calc_basic` (+, -, *, / 연산)
+- [x] `calc_rand` (~부터 ~ 사이의 무작위 수)
+- [x] `get_date` (년/월/일/시/분/초)
+- [ ] `get_mouse_coords` (마우스의 x, y 좌표)
+- [ ] `get_object_coords` (오브젝트의 x, y, 크기 등)
+- [ ] `get_timer_value` (타이머 값)
+- [ ] `get_distance` (~까지의 거리)
+
+#### 자료 (변수/리스트)
+- [x] `set_variable` (변수에 값 정하기)
+- [x] `change_variable` (변수에 ~만큼 더하기)
+- [x] `get_variable` (변수 값)
+- [ ] `add_value_to_list` (리스트에 항목 추가하기)
+- [ ] `remove_value_from_list` (리스트에서 항목 삭제하기)
+- [ ] `insert_value_to_list` (리스트의 특정 위치에 항목 추가하기)
+- [ ] `value_of_index_from_list` (리스트의 특정 값 가져오기)
+- [ ] `length_of_list` (리스트 길이)
+- [ ] `is_included_in_list` (리스트에 항목이 포함되어 있는가)
+- [ ] `show_variable` / `hide_variable` (변수 보이기/숨기기)
+- [ ] `show_list` / `hide_list` (리스트 보이기/숨기기)
+
+#### 함수
+- [x] `function_create` (값 없는 함수 정의)
+- [x] `function_create_value` (값 있는 함수 정의)
+- [x] `function_general` (값 없는 함수 호출)
+- [x] `function_value` (값 있는 함수 호출)
+- [x] `set_func_variable` (함수의 지역 변수 값 정하기)
+- [x] `get_func_variable` (함수의 지역 변수 값)
+- [x] `function_param_string` (함수의 문자/숫자값 파라미터)
+- [x] `function_param_boolean` (함수의 판단 파라미터)

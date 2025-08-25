@@ -44,7 +44,7 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
         // TODO: 실제 변환프로세스
-        await Transpiler(path.join(outputDir, 'project.json'))
+        await Transpiler(path.join(outputDir, 'project.json'),onProgress)
         onProgress('✅ 모든 작업이 성공적으로 완료되었습니다.');
         shell.showItemInFolder(outputDir);
         return { success: true, message: '변환 완료' };

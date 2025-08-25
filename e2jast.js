@@ -22,7 +22,7 @@ This is code that works in FastEntry
 // Helper to create a valid JS identifier from Entry IDs
 function toJsId(id) {
     if (!id) return `invalid_id_${uuidv4().replace(/-/g, '')}`;
-    return `var_${id.replace(/[^\w]/g, '_')}`;
+    return `var_${id.replace(/[\W]/g, '_')}`;
 }
 
 // Helper to get parameter name from its definition block
@@ -49,106 +49,103 @@ function buildAstFromScript(entryScript) {
         return programAst;
     }
 
-    if (!entryScript) {
+    let scriptData;
+    try {
+        scriptData = JSON.parse(entryScript);
+    } catch (e) {
+        console.error("Failed to parse entry script JSON:", e);
+        return programAst; // 파싱 실패 시 빈 Program 노드 반환
+    }
+
+    if (!Array.isArray(scriptData)) {
         return programAst;
     }
 
-    const scriptData = JSON.parse(entryScript);
+    try {
+        for (const blockStack of scriptData) { // 바깥쪽 배열 순회 (블록 묶음)
+            const firstBlock = blockStack[0];
 
-    if (Array.isArray(scriptData)) {
-        try {
-            const scriptData = JSON.parse(entryScript);
+            if (!firstBlock || typeof firstBlock.type !== 'string') {
+                continue; // 유효하지 않은 블록 스택은 건너뜁니다.
+            }
 
-            if (!Array.isArray(scriptData)) return programAst;
+            const isStartBlock = firstBlock.type.startsWith('when_') || firstBlock.type.startsWith('message_cast_');
+            const isFunctionDefinition = firstBlock.type === 'function_create' || firstBlock.type === 'function_create_value';
 
-            for (const blockStack of scriptData) { // 바깥쪽 배열 순회 (블록 묶음)
-                const firstBlock = blockStack[0];
+            if (isStartBlock) {
+                // 시작 블록이라면 EventHandler 노드를 생성합니다.
+                const eventName = firstBlock.type.replace('when_', ''); // 'when_click_start' -> 'click_start'
+                const handlerBody = [];
 
-                if (!firstBlock || typeof firstBlock.type !== 'string') {
-                    continue; // 유효하지 않은 블록 스택은 건너뜁니다.
+                // 'when_click_start' 블록의 경우, statements 배열이 비어있다는 전제 조건에 따라
+                // 첫 번째 블록 자체에는 statements를 포함하지 않습니다.
+                // 그러나 해당 스택의 두 번째 블록부터는 handlerBody에 추가되어야 합니다.
+
+                if (Array.isArray(blockStack)) {
+                    // 첫 번째 블록은 이미 EventHandler 노드의 메타데이터로 사용되었으므로,
+                    // 두 번째 블록부터 실제 handlerBody에 추가합니다.
+                    for (let i = 1; i < blockStack.length; i++) {
+                        const block = blockStack[i];
+                        if (block && typeof block.type === 'string') {
+                            // 개별 블록을 AST 노드로 변환합니다.
+                            // statements는 재귀적으로 처리될 수 있도록 구조를 유지합니다.
+                            handlerBody.push(convertBlockToAstNode(block));
+                        }
+                    }
                 }
 
-                const isStartBlock = firstBlock.type.startsWith('when_') || firstBlock.type.startsWith('message_cast_');
-                const isFunctionDefinition = firstBlock.type === 'function_create' || firstBlock.type === 'function_create_value';
+                programAst.body.push({
+                    type: "EventHandler",
+                    eventName: eventName,
+                    // 시작 블록의 파라미터(예: 메시지 ID)를 arguments 속성으로 복사합니다.
+                    // convertBlockToAstNode를 사용하여 파라미터 내부의 블록도 재귀적으로 변환합니다.
+                    arguments: (firstBlock.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
+                        (typeof param === 'object' && param !== null && param.type)
+                            ? convertBlockToAstNode(param)
+                            : param
+                    ),
+                    handlerBody: handlerBody,
+                });
+            } else {
+                // 함수 정의 블록 처리
+                if (isFunctionDefinition) {
+                    const funcId = firstBlock.id;
+                    const params = [];
+                    let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
 
-
-
-
-                if (isStartBlock) {
-                    // 시작 블록이라면 EventHandler 노드를 생성합니다.
-                    const eventName = firstBlock.type.replace('when_', ''); // 'when_click_start' -> 'click_start'
-                    const handlerBody = [];
-
-                    // 'when_click_start' 블록의 경우, statements 배열이 비어있다는 전제 조건에 따라
-                    // 첫 번째 블록 자체에는 statements를 포함하지 않습니다.
-                    // 그러나 해당 스택의 두 번째 블록부터는 handlerBody에 추가되어야 합니다.
-
-                    if (Array.isArray(blockStack)) {
-                        // 첫 번째 블록은 이미 EventHandler 노드의 메타데이터로 사용되었으므로,
-                        // 두 번째 블록부터 실제 handlerBody에 추가합니다.
-                        for (let i = 1; i < blockStack.length; i++) {
-                            const block = blockStack[i];
-                            if (block && typeof block.type === 'string') {
-                                // 개별 블록을 AST 노드로 변환합니다.
-                                // statements는 재귀적으로 처리될 수 있도록 구조를 유지합니다.
-                                handlerBody.push(convertBlockToAstNode(block));
-                            }
+                    // 파라미터 체인 순회 (function_field_label -> function_field_string -> ...)
+                    while (currentParamBlock && currentParamBlock.params && currentParamBlock.params[1] && currentParamBlock.params[1].value) {
+                        currentParamBlock = currentParamBlock.params[1].value; // 다음 파라미터 블록으로 이동
+                        if (currentParamBlock.type.startsWith('function_field_')) {
+                            // 파라미터 블록의 고유 타입(ID)을 이름으로 사용
+                            params.push(getParamName(currentParamBlock.params[0].value));
                         }
                     }
 
+                    const funcBody = [];
+                    const statements = firstBlock.statements?.[0] || [];
+                    for (const block of statements) {
+                        if (block && typeof block.type === 'string') {
+                            funcBody.push(convertBlockToAstNode(block));
+                        }
+                    }
+
+                    // 함수 정의 노드를 AST에 추가
                     programAst.body.push({
-                        type: "EventHandler",
-                        eventName: eventName,
-                        // 시작 블록의 파라미터(예: 메시지 ID)를 arguments 속성으로 복사합니다.
-                        // convertBlockToAstNode를 사용하여 파라미터 내부의 블록도 재귀적으로 변환합니다.
-                        arguments: (firstBlock.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
-                            (typeof param === 'object' && param !== null && param.type)
-                                ? convertBlockToAstNode(param)
-                                : param
-                        ),
-                        handlerBody: handlerBody,
+                        type: "FunctionDefinition",
+                        id: funcId,
+                        is_value_returning: firstBlock.type === 'function_create_value',
+                        params: params,
+                        body: funcBody,
+                        // 로컬 변수 선언을 위해 함수 본문을 미리 스캔
+                        localVariables: findLocalVariables(funcBody)
                     });
-                } else {
-                    // 함수 정의 블록 처리
-                    if (isFunctionDefinition) {
-                        const funcId = firstBlock.id;
-                        const params = [];
-                        let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
-
-                        // 파라미터 체인 순회 (function_field_label -> function_field_string -> ...)
-                        while (currentParamBlock && currentParamBlock.params && currentParamBlock.params[1] && currentParamBlock.params[1].value) {
-                            currentParamBlock = currentParamBlock.params[1].value; // 다음 파라미터 블록으로 이동
-                            if (currentParamBlock.type.startsWith('function_field_')) {
-                                // 파라미터 블록의 고유 타입(ID)을 이름으로 사용
-                                params.push(getParamName(currentParamBlock.params[0].value));
-                            }
-                        }
-
-                        const funcBody = [];
-                        const statements = firstBlock.statements?.[0] || [];
-                        for (const block of statements) {
-                            if (block && typeof block.type === 'string') {
-                                funcBody.push(convertBlockToAstNode(block));
-                            }
-                        }
-
-                        // 함수 정의 노드를 AST에 추가
-                        programAst.body.push({
-                            type: "FunctionDefinition",
-                            id: funcId,
-                            is_value_returning: firstBlock.type === 'function_create_value',
-                            params: params,
-                            body: funcBody,
-                            // 로컬 변수 선언을 위해 함수 본문을 미리 스캔
-                            localVariables: findLocalVariables(funcBody)
-                        });
-                    }
                 }
             }
-        } catch (e) {
-            console.error("Failed to parse entry script JSON:", e);
-            // 파싱 실패 시 빈 Program 노드 반환
         }
+    } catch (e) {
+        console.error("Failed to process script:", e);
+        // 처리 중 에러 발생 시에도 부분적으로 파싱된 AST를 반환할 수 있도록 함
     }
     return programAst;
 }
@@ -322,6 +319,13 @@ function codeGen(ast) {
                         });
                         generatedCode += `});\n\n`;
                         break;
+                    case "some_key_pressed":
+                        generatedCode += `Entry.on('key_pressed', async (key) => {\n`;
+                        node.handlerBody.forEach(blockNode=>{
+                            generatedCode += generateStatement(blockNode,4);
+                        });
+                        generatedCode += `});\n\n`;
+                        break;
                     default:
                         generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
                         break;
@@ -377,9 +381,55 @@ const statementGenerators = {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
     },
+    'move_xy_time': (node, indent, context) => {
+        const x = generateExpression(node.arguments[0]);
+        const y = generateExpression(node.arguments[1]);
+        const time = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`;
+    },
+    'locate_xy_time': (node,indent,context)=>{
+        const x = generateExpression(node.arguments[0]);
+        const y = generateExpression(node.arguments[1]);
+        const time = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`;
+    },
+    'rotate_relative': (node, indent, context) => {
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`;
+    },
+    'direction_relative': (node, indent, context) => {
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`;
+    },
+    'rotate_by_time': (node, indent, context) => {
+        const angle = generateExpression(node.arguments[0]);
+        const time = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`;
+    },
+    'direction_relative_duration': (node, indent, context) => {
+        const angle = generateExpression(node.arguments[0]);
+        const time = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`;
+    },
+    'direction_absolute':(node,indent,context)=>{
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setDirection(${angle});\n`;
+    },
+    'see_angle_object':(node,indent,context)=>{
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`;
+    },
+    'move_to_angle':(node,indent,context)=>{
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.moveToangle(${angle});`;
+    },
     'sound_start_sound': (node, indent, context) => {
         const soundId = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.playSound(${soundId});\n`;
+    },
+    'locate': (node, indent, context) => {
+        const targetObjectID = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`;
     },
     '_if': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
@@ -453,12 +503,31 @@ const statementGenerators = {
     'set_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.setVariable("${varid}", ${value});\n`;
+        return `${' '.repeat(indent)}Entry.setVariable(${varid}, ${value});\n`;
     },
-    'change_variable': (node,indent,context)=>{
+    'change_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.changeVariable("${varid}", ${value});\n`;
+        return `${' '.repeat(indent)}Entry.changeVariable(${varid}, ${value});\n`;
+    },
+    'start_scene': (node, indent, context) => {
+        const sceneId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.startScene(${sceneId});\n`;
+    },
+    'start_neighbor_scene': (node, indent, context) => {
+        const sceneId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.startNeighborScene(${sceneId});\n`;
+    },
+    'create_clone': (node, indent, context) => {
+        const targetObjectID = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.createClone(${targetObjectID});\n`;
+    },
+    'delete_clone': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.deleteClone();\n`;
+    },
+    'stop_object': (node,indent,context) => {
+        const targetOption = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.stopObject(${targetOption});\n`;
     }
 };
 
@@ -485,7 +554,7 @@ function generateExpression(arg) {
     // 인자가 값을 반환하는 블록일 경우
     switch (arg.type) {
         case 'text': {
-            const textValue = arg.arguments[0] || '';
+            const textValue = (arg.arguments && arg.arguments[0]) || '';
             // isFinite는 공백 문자열을 0으로 취급하므로, 비어있지 않은지 확인합니다.
             // 또한, isFinite는 " 123 "과 같은 공백이 있는 숫자도 true로 반환합니다.
             // JavaScript의 자동 타입 변환과 일치하므로 이 동작은 괜찮습니다.
@@ -524,7 +593,7 @@ function generateExpression(arg) {
         }
         case 'get_date': {
             const selectAction = generateExpression(arg.arguments[0]);
-            switch (selectAction){
+            switch (selectAction) {
                 case 'YEAR': return `new Date().getFullYear()`;
                 case 'MONTH': return `new Date().getMonth() + 1`;
                 case 'DAY': return `new Date().getDate()`;
@@ -545,12 +614,12 @@ function generateExpression(arg) {
             const args = arg.arguments.map(a => generateExpression(a)).join(', ');
             return `await ${funcName}(${args})`;
         }
-        case 'calc_rand':{
+        case 'calc_rand': {
             const min = generateExpression(arg.arguments[0]);
             const max = generateExpression(arg.arguments[1]);
             return `Math.floor(Math.random() * (${max} - ${min} + 1)) + ${min}`;
         }
-        case 'get_variable':{
+        case 'get_variable': {
             const varid = generateExpression(arg.arguments[0]);
             return `Entry.getVariable(${varid})`;
         }
@@ -561,23 +630,6 @@ function generateExpression(arg) {
         }
 
         default: return `/* TODO: Expression for '${arg.type}' */`;
-    }
-}
-/**
- * @brief 문자열 타입체크 및 변환.
- * @param {*} value 
- * @returns converted value
- */
-function TypeOfString(value){
-    switch (typeof value) {
-        case 'string':
-            return `"${value}"`;
-        case `boolean`:
-            return value ? `true` : `false`;
-        case 'number':
-            return value;
-        default:
-            return `/* Unknow */`
     }
 }
 function test_ast(entryScript) {
