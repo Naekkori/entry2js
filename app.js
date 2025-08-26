@@ -63,7 +63,8 @@ const createWindow = () => {
         webPreferences: {
             // preload 스크립트 경로를 올바르게 지정합니다.
             preload: path.join(__dirname, 'preload.js')
-        }
+        },
+        icon:path.join(__dirname,'assets/icons/png/icon.png')
     });
 
     // index.html 파일을 창으로 불러옵니다.

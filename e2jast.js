@@ -431,6 +431,44 @@ const statementGenerators = {
         const targetObjectID = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`;
     },
+    'bounce_wall': (node, indent, context)=>{
+        return `${' '.repeat(indent)}Entry.bounceWall();\n`;
+    },
+    'dialog':(node,indent,context)=>{
+        const message = generateExpression(node.arguments[0]);
+        const option = generateExpression(node.arguments[1]);
+        const time = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`;
+    },
+    'remove_dialog':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.removeDialog();\n`;
+    },
+    'change_shape': (node, indent, context) => {
+        const shapeId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`;
+    },
+    'change_effect_amount': (node, indent, context) => {
+        const effect = generateExpression(node.arguments[0]);
+        const amount = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.changeEffectAmount(${effect}, ${amount});\n`;
+    },
+    'clear_effects': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.clearEffects();\n`;
+    },
+    'change_size': (node, indent, context) => {
+        const size = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeSize(${size});\n`;
+    },
+    'set_size': (node, indent, context) => {
+        const set_size_amount = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setSize(${set_size_amount});\n`;
+    },
+    'show':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.setVisibility(true);\n`;
+    },
+    'hide':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.setVisibility(false);\n`;
+    },
     '_if': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}if (${condition}) {\n`;
