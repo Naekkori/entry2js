@@ -357,6 +357,19 @@ const statementGenerators = {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
     },
+    'locate_x':(node, indent, context)=>{
+        const x = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setX(${x});\n`;
+    },
+    'locate_y':(node, indent, context)=>{
+        const y = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setY(${y});\n`;
+    },
+    'locate_xy': (node, indent, context) => {
+        const x = generateExpression(node.arguments[0]);
+        const y = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`;
+    },
     'move_xy_time': (node, indent, context) => {
         const x = generateExpression(node.arguments[0]);
         const y = generateExpression(node.arguments[1]);
@@ -679,6 +692,39 @@ function generateExpression(arg) {
             const pattern = generateExpression(arg.arguments[1]);
             const replacement = generateExpression(arg.arguments);
             return `String(${string}).replace(${pattern},${replacement})`;
+        }
+        case 'change_string_case': {
+            const string = generateExpression(arg.arguments[0]);
+            const caseType = generateExpression(arg.arguments[1]);
+            switch (caseType) {
+                case 'upper':
+                    return `String(${string}).toUpperCase()`;
+                case 'lower':
+                    return `String(${string}).toLowerCase()`;
+                default:
+                    return `String(${string})`;
+            }
+        }
+        case 'get_block_count': {
+            const target = generateExpression(arg.arguments[0]);
+            return `Entry.getBlockCount(${target})`;
+        }
+        case 'change_rgb_to_hex':{
+            const r = generateExpression(arg.arguments[0]);
+            const g = generateExpression(arg.arguments[1]);
+            const b = generateExpression(arg.arguments[2]);
+            return `Entry.rgbToHex(${r},${g},${b})`;
+        }
+        case 'change_hex_to_rgb':{
+            const hex = generateExpression(arg.arguments[0]);
+            return `Entry.hexToRgb(${hex})`;
+        }
+        // 시스템계정 불러옴
+        case 'get_user_name':{
+            return `Entry.getUserID()`;
+        }
+        case 'get_nickname':{
+            return `Entry.getUsername()`;
         }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {

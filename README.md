@@ -32,10 +32,10 @@
 - [x] **`count_match_string`**: (엔트리봇은 엔트리 작품을 좋아해)에서 (엔트리)가 포함된 개수
 - [x] **`index_of_string`**: (안녕하세요)에서 (하세)의 위치
 - [x] **`replace_string`**: (안녕하세요)의 (안녕)을(를) (Hi)로 바꾸기
-- [ ] **`change_string_case`**: (Hello Entry!)을(를) (대문자/소문자)로 바꾸기
-- [ ] **`get_block_count`**: (자신)의 블록 수 (오브젝트/장면/전체 블록 수 계산)
-- [ ] **`change_rgb_to_hex`**: R (255) G (0) B (0) 값을 Hex 코드로 바꾸기
-- [ ] **`change_hex_to_rgb`**: (#ff0000) 코드의 (R) 값
+- [x] **`change_string_case`**: (Hello Entry!)을(를) (대문자/소문자)로 바꾸기
+- [x] **`get_block_count`**: (자신)의 블록 수 (오브젝트/장면/전체 블록 수 계산)
+- [x] **`change_rgb_to_hex`**: R (255) G (0) B (0) 값을 Hex 코드로 바꾸기
+- [x] **`change_hex_to_rgb`**: (#ff0000) 코드의 (R) 값
 - [x] **`get_boolean_value`**: (판단 블록) 값 (결과를 "TRUE" 또는 "FALSE" 문자열로 반환)
 
 ### 구현불가
@@ -52,8 +52,8 @@
 - [x] **`move_x`**: x좌표를 (숫자) 만큼 바꾸기
 - [x] **`move_y`**: y좌표를 (숫자) 만큼 바꾸기
 - [x] **`move_xy_time`**: (시간)초 동안 x, y 만큼 움직이기
-- [ ] **`locate_x`**: x좌표를 (숫자)(으)로 정하기
-- [ ] **`locate_y`**: y좌표를 (숫자)(으)로 정하기
+- [x] **`locate_x`**: x좌표를 (숫자)(으)로 정하기
+- [x] **`locate_y`**: y좌표를 (숫자)(으)로 정하기
 - [x] **`locate_xy_time`**: (시간)초 동안 x: (숫자) y: (숫자) 위치로 이동하기 (원본 엔트리 에서 move_xy_time 하고 같은 구현으로 확인)
 - [ ] **`locate_xy`**: x: (숫자) y: (숫자) 위치로 이동하기
 - [x] **`locate`**: (오브젝트 또는 마우스 포인터) 위치로 이동하기
