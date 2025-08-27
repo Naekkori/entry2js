@@ -319,10 +319,17 @@ function codeGen(ast) {
                         });
                         generatedCode += `});\n\n`;
                         break;
+                    case "clone_start":
+                        generatedCode += `Entry.on('clone_start', async () => {\n`;
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
+                        });
+                        generatedCode += `});\n\n`;
+                        break;
                     case "some_key_pressed":
                         generatedCode += `Entry.on('key_pressed', async (key) => {\n`;
-                        node.handlerBody.forEach(blockNode=>{
-                            generatedCode += generateStatement(blockNode,4);
+                        node.handlerBody.forEach(blockNode => {
+                            generatedCode += generateStatement(blockNode, 4);
                         });
                         generatedCode += `});\n\n`;
                         break;
@@ -387,7 +394,7 @@ const statementGenerators = {
         const time = generateExpression(node.arguments[2]);
         return `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`;
     },
-    'locate_xy_time': (node,indent,context)=>{
+    'locate_xy_time': (node, indent, context) => {
         const x = generateExpression(node.arguments[0]);
         const y = generateExpression(node.arguments[1]);
         const time = generateExpression(node.arguments[2]);
@@ -411,36 +418,62 @@ const statementGenerators = {
         const time = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`;
     },
-    'direction_absolute':(node,indent,context)=>{
+    'direction_absolute': (node, indent, context) => {
         const angle = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setDirection(${angle});\n`;
     },
-    'see_angle_object':(node,indent,context)=>{
+    'see_angle_object': (node, indent, context) => {
         const angle = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`;
     },
-    'move_to_angle':(node,indent,context)=>{
+    'move_to_angle': (node, indent, context) => {
         const angle = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.moveToangle(${angle});`;
     },
-    'sound_start_sound': (node, indent, context) => {
+    'sound_something_with_block': (node, indent, context) => {
         const soundId = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.playSound(${soundId});\n`;
+    },
+    'sound_something_second_with_block': (node, indent, context) => {
+        const soundId = generateExpression(node.arguments[0]);
+        const duration = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.playSoundForDuration(${soundId}, ${duration});\n`;
+    },
+    'sound_something_wait_with_block': (node, indent, context) => {
+        const soundId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.waitforPlaysound(${soundId});\n`;
+    },
+    'sound_something_second_wait_with_block': (node, indent, context) => {
+        const soundId = generateExpression(node.arguments[0]);
+        const duration = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.waitforPlaysoundWithSeconds(${soundId}, ${duration});\n`;
+    },
+    'sound_from_to_and_wait': (node, indent, context) => {
+        const soundId = generateExpression(node.arguments[0]);
+        const from = generateExpression(node.arguments[1]);
+        const to = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.waitforPlaysoundFromto(${soundId}, ${from}, ${to});\n`;
+    },
+    'sound_from_to': (node, indent, context) => {
+        const soundId = generateExpression(node.arguments[0]);
+        const from = generateExpression(node.arguments[1]);
+        const to = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.playSoundFromto(${soundId}, ${from}, ${to});\n`;
     },
     'locate': (node, indent, context) => {
         const targetObjectID = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`;
     },
-    'bounce_wall': (node, indent, context)=>{
+    'bounce_wall': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.bounceWall();\n`;
     },
-    'dialog':(node,indent,context)=>{
+    'dialog': (node, indent, context) => {
         const message = generateExpression(node.arguments[0]);
         const option = generateExpression(node.arguments[1]);
         const time = generateExpression(node.arguments[2]);
         return `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`;
     },
-    'remove_dialog':(node,indent,context)=>{
+    'remove_dialog': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.removeDialog();\n`;
     },
     'change_shape': (node, indent, context) => {
@@ -463,10 +496,16 @@ const statementGenerators = {
         const set_size_amount = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setSize(${set_size_amount});\n`;
     },
-    'show':(node,indent,context)=>{
+    'flip_x': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.flipX();\n`;
+    },
+    'flip_y': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.flipY();\n`;
+    },
+    'show': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.setVisibility(true);\n`;
     },
-    'hide':(node,indent,context)=>{
+    'hide': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.setVisibility(false);\n`;
     },
     '_if': (node, indent, context) => {
@@ -563,7 +602,7 @@ const statementGenerators = {
     'delete_clone': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.deleteClone();\n`;
     },
-    'stop_object': (node,indent,context) => {
+    'stop_object': (node, indent, context) => {
         const targetOption = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.stopObject(${targetOption});\n`;
     }
@@ -617,9 +656,9 @@ function generateExpression(arg) {
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
             const left = generateExpression(arg.arguments[0]);
-            const op = mapOperator(arg.arguments[1]);
+            const op = generateExpression(arg.arguments[1]);
             const right = generateExpression(arg.arguments[2]);
-            return `(${left} ${op} ${right})`;
+            return `(${left} "${op}" ${right})`;
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
@@ -627,10 +666,24 @@ function generateExpression(arg) {
             // arg.arguments 예시: ["self","y"]
             const target = arg.arguments[0];
             const prop = arg.arguments[1];
-            return `Entry.getObjectCoords("${target}", "${prop}")`
+            return `Entry.getObjectCoords("${target}", "${prop}")`;
+        }
+        case 'coordinate_mouse': {
+            const prop = arg.arguments[0];
+            return `Entry.getMouseCoords("${prop}")`;
+        }
+        case 'quotient_and_mod': {
+            const left = generateExpression(arg.arguments[0]);
+            const op = mapOperator(arg.arguments[1]);
+            const right = generateExpression(arg.arguments[2]);
+            return `Entry.quotientAndmod(${left},${op},${right})`;
+        }
+        case 'get_project_timer_value': {
+            return `Entry.getTimerValue()`;
         }
         case 'get_date': {
-            const selectAction = generateExpression(arg.arguments[0]);
+            // generateExpression 대신, 인자에서 텍스트 값을 직접 추출합니다.
+            const selectAction = arg.arguments[0]?.arguments[0];
             switch (selectAction) {
                 case 'YEAR': return `new Date().getFullYear()`;
                 case 'MONTH': return `new Date().getMonth() + 1`;
@@ -639,9 +692,9 @@ function generateExpression(arg) {
                 case 'MINUTE': return `new Date().getMinutes()`;
                 case 'SECOND': return `new Date().getSeconds()`;
                 default:
-                    return `/* TODO: get_date for ${selectAction} */`;
+                    // 알 수 없는 값이 들어올 경우를 대비한 방어 코드
+                    return `/* Unsupported date part: ${selectAction} */`;
             }
-
         }
         // Function-related expressions
         case 'get_func_variable': {

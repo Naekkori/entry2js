@@ -82,9 +82,18 @@ const Transpiler = async (Jsonpath, onProgress) => {
         }
 
         const promises = objectsToProcess.map(obj => {
+            const scriptFileName = `object_${obj.id}.js`;
+            // C++ 엔진에서 사용할 상대 경로. 플랫폼 간 호환성을 위해 '/'를 사용합니다.
+            const relativeScriptPath = path.join('script', scriptFileName).replace(/\\/g, '/');
+
             return transpileInWorker(obj.script, onProgress, 5000)
                 .then(generatedCode => {
-                    return fs.promises.writeFile(path.join(scriptDir, `object_${obj.id}.js`), generatedCode);
+                    // 변환 성공 시, project.json의 오브젝트에 jscript 키와 경로를 추가합니다.
+                    // 참고: C++ Engine.h 에서는 ObjectInfo.scriptPath 를 사용하므로, 필요시 'jscript'를 'scriptPath'로 변경해야 할 수 있습니다.
+                    obj.jscript = relativeScriptPath;
+
+                    const absoluteScriptPath = path.join(scriptDir, scriptFileName);
+                    return fs.promises.writeFile(absoluteScriptPath, generatedCode);
                 })
                 .catch(error => {
                     const errorMessage = `❌ 오브젝트 '${obj.name}' (ID: ${obj.id}) 처리 중 오류 발생: ${error.message}`;
@@ -96,6 +105,12 @@ const Transpiler = async (Jsonpath, onProgress) => {
 
         // 모든 변환 작업이 완료될 때까지 기다립니다.
         await Promise.all(promises);
+
+        // 모든 작업 완료 후, 수정된 project.json을 다시 저장합니다.
+        await fs.promises.writeFile(Jsonpath, JSON.stringify(projectJson, null, 4));
+        if (onProgress) {
+            onProgress(`✅ project.json 파일에 변환된 스크립트 경로를 업데이트했습니다.`);
+        }
     }
 
     // 처리할 오브젝트가 없으면 아무것도 하지 않습니다.
