@@ -1,4 +1,5 @@
 import fs from "fs";
+import { c } from "tar";
 import { v4 as uuidv4 } from 'uuid';
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
@@ -573,6 +574,14 @@ const statementGenerators = {
     'stop_object': (node, indent, context) => {
         const targetOption = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.stopObject(${targetOption});\n`;
+    },
+    'choose_project_timer_action': (node, indent, context) => {
+        const action = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setTimerAction(${action});\n`;
+    },
+    'set_visible_project_timer': (node,indent,context)=>{
+        const visible = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`;
     }
 };
 
@@ -612,7 +621,6 @@ function generateExpression(arg) {
         // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
         case 'True': return 'true';
         case 'False': return 'false';
-
         // 계산 블록 처리
         case 'calc_basic': {
             const left = generateExpression(arg.arguments[0]);
@@ -620,7 +628,44 @@ function generateExpression(arg) {
             const right = generateExpression(arg.arguments[2]);
             return `(${left} ${op} ${right})`;
         }
-
+        case 'distance_something': {
+            const target = generateExpression(arg.arguments[0]);
+            return `Entry.getDistance(${target})`;
+        }
+        case 'calc_operation':{
+            const left = generateExpression(arg.arguments[0]);
+            const op = mapOperator(arg.arguments[1])
+            return `Entry.calcOperation(${left},${op})`;
+        }
+        case 'length_of_string':{
+            const string = generateExpression(arg.arguments[0]);
+            return `String(${string}).length`;
+        }
+        case 'reverse_of_string':{
+            const string = generateExpression(arg.arguments[0]);
+            return `Entry.reverseOfstr(${string})`;
+        }
+        case 'combine_something':{
+            const left = generateExpression(arg.arguments[0]);
+            const right = generateExpression(arg.arguments[1]);
+            return `String(${left}) + String(${right})`;
+        }
+        case 'char_at':{
+            const string = generateExpression(arg.arguments[0]);
+            const index = generateExpression(arg.arguments[1]);
+            return `Entry.charAt(${string},${index})`;
+        }
+        case 'substring':{
+            const string = generateExpression(arg.arguments[0]);
+            const start = generateExpression(arg.arguments[1]);
+            const end = generateExpression(arg.arguments[2]);
+            return `String(${string}).substring(${start},${end});`;
+        }
+        case 'count_match_string':{
+            const string = generateExpression(arg.arguments[0]);
+            const pattern = generateExpression(arg.arguments[1]);
+            return `Entry.countMatchString(${string},${pattern})`;
+        }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
             const left = generateExpression(arg.arguments[0]);
@@ -648,10 +693,6 @@ function generateExpression(arg) {
         }
         case 'get_project_timer_value': {
             return `Entry.getTimerValue()`;
-        }
-        case 'choose_project_timer_action': {
-            const timerAction = generateExpression(arg.arguments[0]);
-            return `Entry.setTimerAction(${timerAction})`;
         }
         case 'get_date': {
             // generateExpression 대신, 인자에서 텍스트 값을 직접 추출합니다.

@@ -19,16 +19,16 @@
 - [x] **`coordinate_object`**: (오브젝트)의 X좌표/Y좌표/회전각/이동방향/크기/모양번호/모양이름
 - [x] **`quotient_and_mod`**: 10 을(를) 3 (으)로 나눈 몫 / 나머지
 - [x] **`get_project_timer_value`**: 타이머 값
-- [ ] **`choose_project_timer_action`**: 타이머 시작하기 / 멈추기 / 초기화
-- [ ] **`set_visible_project_timer`**: 타이머 보이기 / 숨기기
-- [ ] **`calc_operation`**: 10 의 (제곱/제곱근/sin/cos 등)
+- [x] **`choose_project_timer_action`**: 타이머 시작하기 / 멈추기 / 초기화
+- [x] **`set_visible_project_timer`**: 타이머 보이기 / 숨기기
+- [x] **`calc_operation`**: 10 의 (제곱/제곱근/sin/cos 등)
 - [x] **`get_date`**: 현재 년도/월/일/시/분/초 값
-- [ ] **`distance_something`**: (마우스 포인터) 까지의 거리
-- [ ] **`length_of_string`**: (엔트리)의 길이
-- [ ] **`reverse_of_string`**: (엔트리)을(를) 거꾸로 뒤집은 값
-- [ ] **`combine_something`**: (안녕) 와(과) (엔트리) 합치기 (문자열)
-- [ ] **`char_at`**: (안녕하세요)의 (1)번째 글자
-- [ ] **`substring`**: (안녕하세요)의 (2)번째 글자부터 (4)번째 글자까지
+- [x] **`distance_something`**: (마우스 포인터) 까지의 거리
+- [x] **`length_of_string`**: (엔트리)의 길이
+- [x] **`reverse_of_string`**: (엔트리)을(를) 거꾸로 뒤집은 값
+- [x] **`combine_something`**: (안녕) 와(과) (엔트리) 합치기 (문자열)
+- [x] **`char_at`**: (안녕하세요)의 (1)번째 글자
+- [x] **`substring`**: (안녕하세요)의 (2)번째 글자부터 (4)번째 글자까지
 - [ ] **`count_match_string`**: (엔트리봇은 엔트리 작품을 좋아해)에서 (엔트리)가 포함된 개수
 - [ ] **`index_of_string`**: (안녕하세요)에서 (하세)의 위치
 - [ ] **`replace_string`**: (안녕하세요)의 (안녕)을(를) (Hi)로 바꾸기
