@@ -522,7 +522,7 @@ const statementGenerators = {
     },
     'repeat_basic': (node, indent, context) => {
         const loopLevel = context.loopLevel || 0;
-        const loopVar = `loop_var_${loopLevel}`; // 항상 고유한 이름 생성
+        const loopVar = `fe_loop_${loopLevel}`; // 항상 고유한 이름 생성
         const newContext = { ...context, loopLevel: loopLevel + 1 };
         const count = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
