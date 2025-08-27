@@ -632,13 +632,13 @@ function generateExpression(arg) {
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
         case 'coordinate_object': {
             // arg.arguments 예시: ["self","y"]
-            const target = arg.arguments[0];
-            const prop = arg.arguments[1];
-            return `Entry.getObjectCoords("${target}", "${prop}")`;
+            const target = generateExpression(arg.arguments[0]);
+            const prop = generateExpression(arg.arguments[1]);
+            return `Entry.getObjectCoords(${target}, ${prop})`;
         }
         case 'coordinate_mouse': {
-            const prop = arg.arguments[0];
-            return `Entry.getMouseCoords("${prop}")`;
+            const prop = generateExpression(arg.arguments[0]);
+            return `Entry.getMouseCoords(${prop})`;
         }
         case 'quotient_and_mod': {
             const left = generateExpression(arg.arguments[0]);
