@@ -644,7 +644,7 @@ function generateExpression(arg) {
             const left = generateExpression(arg.arguments[0]);
             const op = generateExpression(arg.arguments[1]);
             const right = generateExpression(arg.arguments[2]);
-            return `Entry.quotientAndmod(${left},"${op}",${right})`;
+            return `Entry.quotientAndmod(${left},${op},${right})`;
         }
         case 'get_project_timer_value': {
             return `Entry.getTimerValue()`;
