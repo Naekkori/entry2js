@@ -29,9 +29,9 @@
 - [x] **`combine_something`**: (안녕) 와(과) (엔트리) 합치기 (문자열)
 - [x] **`char_at`**: (안녕하세요)의 (1)번째 글자
 - [x] **`substring`**: (안녕하세요)의 (2)번째 글자부터 (4)번째 글자까지
-- [ ] **`count_match_string`**: (엔트리봇은 엔트리 작품을 좋아해)에서 (엔트리)가 포함된 개수
-- [ ] **`index_of_string`**: (안녕하세요)에서 (하세)의 위치
-- [ ] **`replace_string`**: (안녕하세요)의 (안녕)을(를) (Hi)로 바꾸기
+- [x] **`count_match_string`**: (엔트리봇은 엔트리 작품을 좋아해)에서 (엔트리)가 포함된 개수
+- [x] **`index_of_string`**: (안녕하세요)에서 (하세)의 위치
+- [x] **`replace_string`**: (안녕하세요)의 (안녕)을(를) (Hi)로 바꾸기
 - [ ] **`change_string_case`**: (Hello Entry!)을(를) (대문자/소문자)로 바꾸기
 - [ ] **`get_block_count`**: (자신)의 블록 수 (오브젝트/장면/전체 블록 수 계산)
 - [ ] **`change_rgb_to_hex`**: R (255) G (0) B (0) 값을 Hex 코드로 바꾸기

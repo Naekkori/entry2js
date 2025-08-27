@@ -323,7 +323,7 @@ function generateEventHandler(node, config) {
 function mapOperator(op) {
     const opMap = {
         PLUS: '+', MINUS: '-', TIMES: '*', DIVIDE: '/', MOD: '%',
-        EQUAL: '===', GREATER: '>', LESS: '<',AND: '&&', OR: '||', NOT: '!',
+        EQUAL: '===', GREATER: '>', LESS: '<', AND: '&&', OR: '||', NOT: '!',
         NOT_EQUAL: '!==', GREATER_OR_EQUAL: '>=', LESS_OR_EQUAL: '<=',
     };
     return opMap[op] || op; // 맵에 없으면 원본 반환
@@ -504,6 +504,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
+        code += `${' '.repeat(indent)}Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -517,6 +518,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, newContext);
         });
+        code += `${' '.repeat(indent)}Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -526,6 +528,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
+        code += `${' '.repeat(indent)}Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -579,7 +582,7 @@ const statementGenerators = {
         const action = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setTimerAction(${action});\n`;
     },
-    'set_visible_project_timer': (node,indent,context)=>{
+    'set_visible_project_timer': (node, indent, context) => {
         const visible = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`;
     }
@@ -632,39 +635,50 @@ function generateExpression(arg) {
             const target = generateExpression(arg.arguments[0]);
             return `Entry.getDistance(${target})`;
         }
-        case 'calc_operation':{
+        case 'calc_operation': {
             const left = generateExpression(arg.arguments[0]);
             const op = mapOperator(arg.arguments[1])
             return `Entry.calcOperation(${left},${op})`;
         }
-        case 'length_of_string':{
+        case 'length_of_string': {
             const string = generateExpression(arg.arguments[0]);
             return `String(${string}).length`;
         }
-        case 'reverse_of_string':{
+        case 'reverse_of_string': {
             const string = generateExpression(arg.arguments[0]);
             return `Entry.reverseOfstr(${string})`;
         }
-        case 'combine_something':{
+        case 'combine_something': {
             const left = generateExpression(arg.arguments[0]);
             const right = generateExpression(arg.arguments[1]);
             return `String(${left}) + String(${right})`;
         }
-        case 'char_at':{
+        case 'char_at': {
             const string = generateExpression(arg.arguments[0]);
             const index = generateExpression(arg.arguments[1]);
             return `Entry.charAt(${string},${index})`;
         }
-        case 'substring':{
+        case 'substring': {
             const string = generateExpression(arg.arguments[0]);
             const start = generateExpression(arg.arguments[1]);
             const end = generateExpression(arg.arguments[2]);
             return `String(${string}).substring(${start},${end});`;
         }
-        case 'count_match_string':{
+        case 'count_match_string': {
             const string = generateExpression(arg.arguments[0]);
             const pattern = generateExpression(arg.arguments[1]);
             return `Entry.countMatchString(${string},${pattern})`;
+        }
+        case 'index_of_string': {
+            const string = generateExpression(arg.arguments[0]);
+            const pattern = generateExpression(arg.arguments[1]);
+            return `Entry.indexOfString(${string},${pattern})`;
+        }
+        case 'replace_string': {
+            const string = generateExpression(arg.arguments[0]);
+            const pattern = generateExpression(arg.arguments[1]);
+            const replacement = generateExpression(arg.arguments);
+            return `String(${string}).replace(${pattern},${replacement})`;
         }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
