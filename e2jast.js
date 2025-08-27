@@ -248,94 +248,11 @@ function codeGen(ast) {
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
         ast.body.forEach(node => {
             if (node.type === "EventHandler") {
-                // 'when_click_start'에 대한 처리
-                switch (node.eventName) {
-                    case "run_button_click":
-                        generatedCode += `Entry.on('project_start', async () => {\n`;
-                        // 핸들러 본문(handlerBody)의 AST 노드를 JavaScript 코드로 변환
-                        node.handlerBody.forEach(blockNode => {
-                            // 각 최상위 블록을 Statement로 변환하고, 들여쓰기(4)를 적용합니다.
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "mouse_click":
-                        generatedCode += `Entry.on('mouse_down', async () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "mouse_click_cancel":
-                        generatedCode += `Entry.on('mouse_up', async () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "object_click":
-                        generatedCode += `Entry.on('object_click', async (objectId) => {\n`;
-                        generatedCode += `  if(objectId === Entry.getId()){\n`
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `  }\n`;
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "object_click_canceled":
-                        generatedCode += `Entry.on('object_click_canceled', async () => {\n`;
-                        // 이 이벤트는 특정 오브젝트에 국한되지 않으므로 if문 없이 모든 블록을 실행합니다.
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break; // Fall-through 버그 수정
-                    case "message_cast":
-                        // 메시지 ID가 null이면 이벤트 핸들러를 생성하지 않습니다.
-                        if (node.arguments[0] === null || typeof node.arguments[0] === 'undefined') {
-                            generatedCode += `// INFO: 'when_message_cast' block with a null message ID was skipped.\n\n`;
-                            break;
-                        }
-                        generatedCode += `Entry.on('message_received', async (messageId) => {\n`;
-                        generatedCode += `  if (messageId === ${generateExpression(node.arguments[0])}) {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            // if문 내부는 들여쓰기 4칸으로 생성합니다.
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `  }\n`; // if 문의 닫는 괄호를 루프 밖으로 이동하고 올바르게 들여쓰기합니다.
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "scene_start":
-                        generatedCode += `Entry.on('scene_start', async () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "clone_created":
-                        generatedCode += `Entry.on('clone_created', async () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "clone_start":
-                        generatedCode += `Entry.on('clone_start', async () => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    case "some_key_pressed":
-                        generatedCode += `Entry.on('key_pressed', async (key) => {\n`;
-                        node.handlerBody.forEach(blockNode => {
-                            generatedCode += generateStatement(blockNode, 4);
-                        });
-                        generatedCode += `});\n\n`;
-                        break;
-                    default:
-                        generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
-                        break;
+                const config = eventHandlerConfig[node.eventName];
+                if (config) {
+                    generatedCode += generateEventHandler(node, config);
+                } else {
+                    generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
                 }
             }
             // FunctionDefinition은 이미 위에서 처리했으므로 여기서는 건너뜁니다.
@@ -345,6 +262,58 @@ function codeGen(ast) {
     return generatedCode;
 }
 
+const eventHandlerConfig = {
+    "run_button_click": { event: 'project_start' },
+    "mouse_click": { event: 'mouse_down' },
+    "mouse_click_cancel": { event: 'mouse_up' },
+    "object_click": {
+        event: 'object_click',
+        param: 'objectId',
+        condition: 'objectId === Entry.getId()',
+        indent: 2
+    },
+    "object_click_canceled": { event: 'object_click_canceled' },
+    "message_cast": {
+        event: 'message_received',
+        param: 'messageId',
+        conditionBuilder: (args) => {
+            if (args[0] === null || typeof args[0] === 'undefined') return null;
+            return `messageId === ${generateExpression(args[0])}`;
+        },
+        indent: 2
+    },
+    "scene_start": { event: 'scene_start' },
+    "clone_created": { event: 'clone_created' },
+    "clone_start": { event: 'clone_start' },
+    "some_key_pressed": { event: 'key_pressed', param: 'key' },
+};
+
+function generateEventHandler(node, config) {
+    let code = '';
+    const param = config.param || '';
+    let condition = config.condition;
+
+    if (config.conditionBuilder) {
+        condition = config.conditionBuilder(node.arguments);
+        if (condition === null) {
+            return `// INFO: 'when_${node.eventName}' block with invalid arguments was skipped.\n\n`;
+        }
+    }
+
+    code += `Entry.on('${config.event}', async (${param}) => {\n`;
+    if (condition) {
+        code += `${' '.repeat(2)}if (${condition}) {\n`;
+    }
+
+    const bodyIndent = 2 + (config.indent || 0);
+    node.handlerBody.forEach(blockNode => {
+        code += generateStatement(blockNode, bodyIndent);
+    });
+
+    if (condition) code += `${' '.repeat(2)}}\n`;
+    code += `});\n\n`;
+    return code;
+}
 /**
  * 엔트리의 연산자 문자열을 JavaScript 연산자로 변환합니다.
  * @param {string} op - 엔트리 연산자 (예: "PLUS", "MINUS", "EQUAL")
@@ -680,6 +649,10 @@ function generateExpression(arg) {
         }
         case 'get_project_timer_value': {
             return `Entry.getTimerValue()`;
+        }
+        case 'choose_project_timer_action': {
+            const timerAction = generateExpression(arg.arguments[0]);
+            return `Entry.setTimerAction(${timerAction})`;
         }
         case 'get_date': {
             // generateExpression 대신, 인자에서 텍스트 값을 직접 추출합니다.

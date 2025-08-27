@@ -18,7 +18,7 @@
 - [x] **`coordinate_mouse`**: 마우스 포인터의 X 좌표 값 / Y 좌표 값
 - [x] **`coordinate_object`**: (오브젝트)의 X좌표/Y좌표/회전각/이동방향/크기/모양번호/모양이름
 - [x] **`quotient_and_mod`**: 10 을(를) 3 (으)로 나눈 몫 / 나머지
-- [ ] **`get_project_timer_value`**: 타이머 값
+- [x] **`get_project_timer_value`**: 타이머 값
 - [ ] **`choose_project_timer_action`**: 타이머 시작하기 / 멈추기 / 초기화
 - [ ] **`set_visible_project_timer`**: 타이머 보이기 / 숨기기
 - [ ] **`calc_operation`**: 10 의 (제곱/제곱근/sin/cos 등)
