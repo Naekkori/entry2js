@@ -1,5 +1,4 @@
 import fs from "fs";
-import { c } from "tar";
 import { v4 as uuidv4 } from 'uuid';
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
@@ -523,8 +522,7 @@ const statementGenerators = {
     },
     'repeat_basic': (node, indent, context) => {
         const loopLevel = context.loopLevel || 0;
-        const loopVars = ['i', 'j', 'k'];
-        const loopVar = loopVars[loopLevel] || `loop_var_${loopLevel}`;
+        const loopVar = `loop_var_${loopLevel}`; // 항상 고유한 이름 생성
         const newContext = { ...context, loopLevel: loopLevel + 1 };
         const count = generateExpression(node.arguments[0]);
         let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
@@ -699,7 +697,7 @@ function generateExpression(arg) {
         case 'replace_string': {
             const string = generateExpression(arg.arguments[0]);
             const pattern = generateExpression(arg.arguments[1]);
-            const replacement = generateExpression(arg.arguments);
+            const replacement = generateExpression(arg.arguments[2]);
             return `String(${string}).replace(${pattern},${replacement})`;
         }
         case 'change_string_case': {
