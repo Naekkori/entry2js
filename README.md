@@ -55,14 +55,14 @@
 - [x] **`locate_x`**: x좌표를 (숫자)(으)로 정하기
 - [x] **`locate_y`**: y좌표를 (숫자)(으)로 정하기
 - [x] **`locate_xy_time`**: (시간)초 동안 x: (숫자) y: (숫자) 위치로 이동하기 (원본 엔트리 에서 move_xy_time 하고 같은 구현으로 확인)
-- [ ] **`locate_xy`**: x: (숫자) y: (숫자) 위치로 이동하기
+- [x] **`locate_xy`**: x: (숫자) y: (숫자) 위치로 이동하기
 - [x] **`locate`**: (오브젝트 또는 마우스 포인터) 위치로 이동하기
-- [ ] **`locate_object_time`**: (시간)초 동안 (오브젝트 또는 마우스 포인터) 위치로 이동하기
+- [x] **`locate_object_time`**: (시간)초 동안 (오브젝트 또는 마우스 포인터) 위치로 이동하기
 - [x] **`rotate_relative`**: (각도) 만큼 회전하기
 - [x] **`direction_relative`**: 이동 방향을 (각도) 만큼 회전하기 (같은코드)
 - [x] **`rotate_by_time`**: (시간)초 동안 (각도) 만큼 회전하기
 - [x] **`direction_relative_duration`**: (시간)초 동안 이동 방향을 (각도) 만큼 회전하기 (같은코드)
-- [ ] **`rotate_absolute`**: 회전 각도를 (각도)(으)로 정하기
+- [x] **`rotate_absolute`**: 회전 각도를 (각도)(으)로 정하기
 - [x] **`direction_absolute`**: 이동 방향을 (각도)(으)로 정하기
 - [x] **`see_angle_object`**: (오브젝트 또는 마우스 포인터) 쪽 바라보기
 - [x] **`move_to_angle`**: (각도) 방향으로 (숫자) 만큼 이동하기

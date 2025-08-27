@@ -598,6 +598,15 @@ const statementGenerators = {
     'set_visible_project_timer': (node, indent, context) => {
         const visible = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`;
+    },
+    'locate_object_time':(node, indent, context)=>{
+        const id = generateExpression(node.arguments[0]);
+        const time = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.locateObjectTime(${id}, ${time});\n`;
+    },
+    'rotate_absolute':(node, indent, context)=>{
+        const angle = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setAngle(${angle});\n`;
     }
 };
 
