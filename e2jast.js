@@ -321,10 +321,9 @@ function generateEventHandler(node, config) {
  */
 function mapOperator(op) {
     const opMap = {
-        PLUS: '+', MINUS: '-', TIMES: '*', DIVIDE: '/',
-        EQUAL: '===', GREATER: '>', LESS: '<',
-        // TODO: 논리 연산자 추가
-        // AND: '&&', OR: '||'
+        PLUS: '+', MINUS: '-', TIMES: '*', DIVIDE: '/', MOD: '%',
+        EQUAL: '===', GREATER: '>', LESS: '<',AND: '&&', OR: '||', NOT: '!',
+        NOT_EQUAL: '!==', GREATER_OR_EQUAL: '>=', LESS_OR_EQUAL: '<=',
     };
     return opMap[op] || op; // 맵에 없으면 원본 반환
 }
@@ -625,9 +624,9 @@ function generateExpression(arg) {
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
             const left = generateExpression(arg.arguments[0]);
-            const op = generateExpression(arg.arguments[1]);
+            const op = mapOperator(arg.arguments[1]);
             const right = generateExpression(arg.arguments[2]);
-            return `(${left} "${op}" ${right})`;
+            return `(${left} ${op} ${right})`;
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
