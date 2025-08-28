@@ -356,11 +356,11 @@ const statementGenerators = {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
     },
-    'locate_x':(node, indent, context)=>{
+    'locate_x': (node, indent, context) => {
         const x = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setX(${x});\n`;
     },
-    'locate_y':(node, indent, context)=>{
+    'locate_y': (node, indent, context) => {
         const y = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setY(${y});\n`;
     },
@@ -597,14 +597,74 @@ const statementGenerators = {
         const visible = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`;
     },
-    'locate_object_time':(node, indent, context)=>{
+    'locate_object_time': (node, indent, context) => {
         const id = generateExpression(node.arguments[0]);
         const time = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}Entry.locateObjectTime(${id}, ${time});\n`;
     },
-    'rotate_absolute':(node, indent, context)=>{
+    'rotate_absolute': (node, indent, context) => {
         const angle = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.setAngle(${angle});\n`;
+    },
+    'change_to_next_shape': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.changeShapeNext();\n`;
+    },
+    'add_effect_amount': (node, indent, context) => {
+        const amount = generateExpression(node.arguments[0]);
+        const effect = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.addEffectAmount(${effect}, ${amount});\n`;
+    },
+    'change_scale_size': (node, indent, context) => {
+        const size = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeSize(${size});\n`;
+    },
+    'set_scale_size': (node, indent, context) => {
+        const size = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setSize(${size});\n`;
+    },
+    'stretch_scale_size': (node, indent, context) => {
+        const dimension = generateExpression(node.arguments[0]);
+        const size = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.strechScaleSize(${dimension}, ${size});\n`;
+    },
+    'reset_scale_size': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.resetSize();\n`;
+    },
+    'change_object_index': (node, indent, context) => {
+        const index = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeObjectIndex(${index});\n`;
+    },
+    'sound_volume_change': (node, indent, context) => {
+        const volume = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeVolume(${volume});\n`;
+    },
+    'sound_volume_set': (node, indent, context) => {
+        const volume = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeVolume(${volume});\n`;
+    },
+    'sound_speed_change': (node, indent, context) => {
+        const speed = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`;
+    },
+    'sound_speed_set': (node, indent, context) => {
+        const speed = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`;
+    },
+    /*'get_sound_volume': (node, indent, context)=>{
+        return `${' '.repeat(indent)}Entry.getVolume();\n`;
+    },*/
+    /*'get_sound_speed':(node, indent, context)=>{
+        return `${' '.repeat(indent)}Entry.getSoundSpeed();\n`;
+    },*/
+    'sound_silent_all':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.stopAllSounds();\n`;
+    },
+    'play_bgm':(node,indent,context)=>{
+        const soundID = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.playBgm(${soundID});\n`;
+    },
+    'stop_bgm':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.stopBgm();\n`;
     }
 };
 
@@ -712,25 +772,33 @@ function generateExpression(arg) {
                     return `String(${string})`;
             }
         }
+        case 'get_sound_volume':
+            return `Entry.getVolume()`;
+        case 'get_sound_speed':
+            return `Entry.getSoundSpeed()`;
+        case 'get_sound_duration':{
+            const soundId = generateExpression(arg.arguments[0]);
+            return `Entry.getSoundDuration(${soundId})`;
+        }
         case 'get_block_count': {
             const target = generateExpression(arg.arguments[0]);
             return `Entry.getBlockCount(${target})`;
         }
-        case 'change_rgb_to_hex':{
+        case 'change_rgb_to_hex': {
             const r = generateExpression(arg.arguments[0]);
             const g = generateExpression(arg.arguments[1]);
             const b = generateExpression(arg.arguments[2]);
             return `Entry.rgbToHex(${r},${g},${b})`;
         }
-        case 'change_hex_to_rgb':{
+        case 'change_hex_to_rgb': {
             const hex = generateExpression(arg.arguments[0]);
             return `Entry.hexToRgb(${hex})`;
         }
         // 시스템계정 불러옴
-        case 'get_user_name':{
+        case 'get_user_name': {
             return `Entry.getUserID()`;
         }
-        case 'get_nickname':{
+        case 'get_nickname': {
             return `Entry.getUsername()`;
         }
         // 판단 블록의 조건 부분 처리
