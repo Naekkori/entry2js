@@ -3,7 +3,7 @@ name: Build/release
 on:
   push:
     tags:
-      - 'v*' # 태그 이름이 'v'로 시작하는 경우에만 실행
+      - '*' # 태그 이름 상관없이 실행
 
 jobs:
   release:
