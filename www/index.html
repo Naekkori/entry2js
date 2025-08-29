@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Entry2JS</title>
     <link rel="stylesheet" href="../node_modules/almond.css/dist/almond.min.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         @font-face {
             font-family: 'GowunDodum-Regular';
@@ -11,6 +13,7 @@
             font-weight: normal;
             font-style: normal;
         }
+
         :root {
             --primaryH: 206;
             --primaryS: 100%;
@@ -30,15 +33,79 @@
             --heading-margin: 1.5rem 0 1rem;
             --border-radius: 2px;
         }
+
+        .settings_window header {
+            position: relative;
+            /* 자식 요소인 닫기 버튼을 절대 위치로 배치하기 위한 기준점 설정 */
+            padding-bottom: 0.5rem;
+            /* 제목과 하단 경계선 사이의 여백 */
+            border-bottom: 1px solid #eee;
+            /* 헤더와 콘텐츠를 구분하는 선 */
+            margin-bottom: 1rem;
+            /* 헤더와 테이블 내용 사이의 여백 */
+        }
+
+        .close_btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
     </style>
 </head>
+
 <body>
-<header class="app_header">
-<button type="button" id="settings_btn">설정</button>
-</header>
-<div id="app" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
-    <h1>앱페이지</h1>
-</div>
-<script src="index.js"></script>
+    <div class="settings_bg" id="setting_container">
+        <div class="settings_window">
+            <header>
+                <h1>설정</h1>
+                <button type="button" aria-label="닫기" class="close_btn" onclick="closeSettings()">
+                    <!-- SVG를 인라인으로 직접 삽입 -->
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                        fill="currentColor">
+                        <path
+                            d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" />
+                    </svg>
+                </button>
+            </header>
+            <div class="settings_content">
+                <table>
+                    <tr>
+                        <th>항목</th>
+                        <th>값</th>
+                    </tr>
+                    <tr>
+                        <td>바이트코드 컴파일</td>
+                        <td><input type="checkbox" name="option" id="bytecode_compile" onchange="EnableCompile(this)"></td>
+                    </tr>
+                    <tr>
+                        <td>바이트코드 컴파일러 경로</td>
+                        <td>
+                            <input type="file" name="bytecode_compiler_path" id="bytecode_compiler_path">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <header class="app_header">
+        <button type="button" id="setting_btn" aria-label="설정 열기"
+            style="background: none; border: none; padding: 0; cursor: pointer;" onclick="openSettings()">
+
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f">
+                <path
+                    d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm112-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Z" />
+            </svg>
+        </button>
+    </header>
+    <div id="app"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
+        <h1>앱페이지</h1>
+    </div>
+    <script src="index.js"></script>
 </body>
+
 </html>

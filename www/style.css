@@ -1,0 +1,100 @@
+.settings_bg {
+    /* 기본적으로 숨김 처리 */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 내용물을 중앙에 배치하기 위한 준비 */
+    justify-content: center;
+    align-items: center;
+}
+
+.settings_bg.show {
+    /* show 클래스가 있을 때만 보이도록 설정 (flex로 중앙 배치) */
+    display: flex;
+}
+
+.settings_window {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 30em;
+    height: 25em;
+}
+
+.settings_window header {
+    position: relative;
+    /* 닫기 버튼의 절대 위치 기준점 */
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+    min-height: 24px;
+    /* 아이콘 높이를 고려한 최소 높이 설정 */
+}
+
+.settings_content {
+    width: 20em;
+    height: 10em;
+    margin-top: 5%;
+}
+
+.close_btn {
+    position: absolute;
+    top: 50%;
+    /* 헤더의 세로 중앙에 위치 */
+    right: 0;
+    transform: translateY(-50%);
+    /* Y축으로 자신의 높이의 50%만큼 이동하여 정확히 중앙 정렬 */
+    color: #1f1f1f;
+    /* SVG 아이콘의 기본 색상 설정 */
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    /* 아이콘 주변 여백 확보 및 클릭 영역 확대 */
+    display: flex;
+    /* 아이콘을 중앙에 배치하기 위함 */
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease-in-out;
+    /* 부드러운 아이콘 색상 전환 효과 */
+    transition: background-color 0.2s ease-in-out;
+}
+table{
+    width: max-content; /* 테이블 너비를 부모 요소에 맞춤 */
+    table-layout: fixed; /* 내용에 상관없이 너비를 고정 */
+    border-collapse: collapse; /* 테두리 선을 한 줄로 합침 */
+    word-break: break-all;
+}
+
+table th, table td {
+    /* 긴 텍스트(파일 경로 등)가 셀 너비를 초과할 경우 줄바꿈을 강제합니다. */
+    overflow-wrap: break-word;
+    word-break: break-all;
+    padding: 8px; /* 셀 안쪽 여백 추가 */
+    text-align: left; /* 텍스트 왼쪽 정렬 */
+    border-bottom: 1px solid #ddd; /* 행 구분선 추가 */
+}
+
+/* 두 번째 열의 너비를 강제로 지정합니다. */
+table th:first-child,
+table td:first-child {
+    width: 50%;
+}
+/* 두 번째 열의 너비를 지정합니다. (열 개수에 맞게 추가/수정) */
+table th:nth-child(2), table td:nth-child(2) {
+    width: 100%; /* 예시: 두 번째 열(버튼 등)이 30%를 차지하도록 설정 */
+}
+.close_btn:hover {
+    color: #fff;
+    /* 마우스 오버 시 아이콘 색상 변경 */
+}
+
+h1 {
+    margin-top: 10px;
+    margin-bottom: 10;
+}

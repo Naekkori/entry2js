@@ -33,7 +33,16 @@ const addLog = (message) => {
         logContainer.scrollTop = logContainer.scrollHeight; // 자동 스크롤
     }
 };
-
+function closeSettings() {
+    document.getElementById('setting_container').classList.remove('show');
+}
+function openSettings() {
+    document.getElementById('setting_container').classList.add('show');
+}
+function EnableCompile(checkboxElement){
+    console.log(`CompileEnabled: ${checkboxElement.checked}`);
+    console.log(checkboxElement); // 전달된 요소 확인용
+}
 // 페이지 렌더링
 appContainer.innerHTML = home;
 
