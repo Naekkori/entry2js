@@ -656,15 +656,36 @@ const statementGenerators = {
     /*'get_sound_speed':(node, indent, context)=>{
         return `${' '.repeat(indent)}Entry.getSoundSpeed();\n`;
     },*/
-    'sound_silent_all':(node,indent,context)=>{
+    'sound_silent_all': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopAllSounds();\n`;
     },
-    'play_bgm':(node,indent,context)=>{
+    'play_bgm': (node, indent, context) => {
         const soundID = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.playBgm(${soundID});\n`;
     },
-    'stop_bgm':(node,indent,context)=>{
+    'stop_bgm': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopBgm();\n`;
+    },
+    'ask_and_wait': (node, indent, context) => {
+        const question = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.askAndWait(${question});\n`;
+    },
+    'set_visible_answer': (node, indent, context) => {
+        const visible = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.setVisibleAnswer(${visible});\n`;
+    },
+    'show_variable':(node,indent,context)=>{
+        const variableID = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.showVariable(${variableID});\n`;
+    },
+    'hide_variable':(node,indent,context)=>{
+        const variableID = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.hideVariable(${variableID});\n`;
+    },
+    'value_of_index_from_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        const index = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.valueOfIndexList(${list},${index});\n`;
     }
 };
 
@@ -776,7 +797,7 @@ function generateExpression(arg) {
             return `Entry.getVolume()`;
         case 'get_sound_speed':
             return `Entry.getSoundSpeed()`;
-        case 'get_sound_duration':{
+        case 'get_sound_duration': {
             const soundId = generateExpression(arg.arguments[0]);
             return `Entry.getSoundDuration(${soundId})`;
         }
@@ -793,6 +814,10 @@ function generateExpression(arg) {
         case 'change_hex_to_rgb': {
             const hex = generateExpression(arg.arguments[0]);
             return `Entry.hexToRgb(${hex})`;
+        }
+        // 대답 가져오기
+        case 'get_canvas_input_value': {
+            return 'Entry.getCanvasInputValue()';
         }
         // 시스템계정 불러옴
         case 'get_user_name': {
