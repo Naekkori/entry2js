@@ -137,3 +137,6 @@ yarn.lock
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+#electron
+dist/
