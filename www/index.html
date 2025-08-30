@@ -8,12 +8,25 @@
     <link rel="stylesheet" href="style.css">
     <style>
         @font-face {
-            font-family: 'GowunDodum-Regular';
-            src: url('GowunDodum-Regular.woff') format('woff');
-            font-weight: normal;
-            font-style: normal;
+            font-family: 'NanumBarunGothic';
+            font-weight: 400;
+            src: url('fonts/nanum/NanumBarunGothic.ttf') format('truetype');
         }
-
+        @font-face {
+            font-family: 'NanumBarunGothic';
+            font-weight: 600;
+            src: url('fonts/nanum/NanumBarunGothicBold.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'NanumBarunGothic';
+            font-weight: 200;
+            src: url('fonts/nanum/NanumBarunGothicLight.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'NanumBarunGothic';
+            font-weight: 100;
+            src: url('fonts/nanum/NanumBarunGothicUltraLight.ttf') format('truetype');
+        }
         :root {
             --primaryH: 206;
             --primaryS: 100%;
@@ -23,11 +36,11 @@
             --secondaryS: 0%;
             --secondaryL: 0%;
             --secondary-bg: #ffffff;
-            --font-family: GowunDodum-Regular, serif;
-            --font-size-root: 16px;
-            --font-weight-thin: 300;
-            --font-weight-normal: 200;
-            --font-weight-bold: 400;
+            --font-family: NanumBarunGothic, sans serif;
+            --font-size-root: 17px;
+            --font-weight-thin: 100;
+            --font-weight-normal: 400;
+            --font-weight-bold: 600;
             --font-weight-bolder: 700;
             --line-height: 1.75rem;
             --heading-margin: 1.5rem 0 1rem;
@@ -78,14 +91,18 @@
                         <th>값</th>
                     </tr>
                     <tr>
-                        <td>바이트코드 컴파일</td>
-                        <td><input type="checkbox" name="option" id="bytecode_compile" onchange="EnableCompile(this)"></td>
+                        <td>바이트코드 컴파일<p class="hint">javascript 를 바이트코드 로 컴파일 합니다,<br>성능이 향상 될수 있습니다.</p></td>
+                        <td><input type="checkbox" name="option" id="bytecode_compile" onchange="EnableCompile(this)">
+                        </td>
                     </tr>
                     <tr>
                         <td>바이트코드 컴파일러 경로</td>
                         <td>
-                            <input type="text" placeholder="여기에 FastEntry.exe의 경로 입력" id="bytecode_compile_path" onchange="SetCompilePath(this)" disabled>
-                            <button type="button" id="bytecode_compile_btn" aria-label="컴파일러 경로 열기" disabled>열기</button>
+                            <div class="input-group">
+                                <input type="text" placeholder="여기에 FastEntry.exe의 경로 입력" id="bytecode_compile_path"
+                                    onchange="SetCompilePath(this)" disabled>
+                                <button type="button" id="bytecode_compile_btn" aria-label="컴파일러 경로 열기" disabled>열기</button>
+                            </div>
                         </td>
                     </tr>
                     <tr>
@@ -93,8 +110,8 @@
                         <td id="info"></td>
                     </tr>
                 </table>
-                <cite>이 설정은 실시간 으로 저장됩니다.</cite>
             </div>
+            <p class="hint">이 설정은 실시간 으로 저장됩니다.</p>
         </div>
     </div>
     <header class="app_header">

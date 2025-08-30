@@ -321,7 +321,7 @@ function generateEventHandler(node, config) {
  */
 function mapOperator(op) {
     const opMap = {
-        PLUS: '+', MINUS: '-', TIMES: '*', DIVIDE: '/', MOD: '%',
+        PLUS: '+', MINUS: '-', MULTI: '*', DIVIDE: '/', MOD: '%', DIV: '/', MODULO: '%',
         EQUAL: '===', GREATER: '>', LESS: '<', AND: '&&', OR: '||', NOT: '!',
         NOT_EQUAL: '!==', GREATER_OR_EQUAL: '>=', LESS_OR_EQUAL: '<=',
     };
@@ -516,7 +516,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}await Entry.deltaTimeDelay();\n`;
+        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -529,7 +529,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, newContext);
         });
-        code += `${' '.repeat(indent)}await Entry.deltaTimeDelay();\n`;
+        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -539,7 +539,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}await Entry.deltaTimeDelay();\n`;
+        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -608,6 +608,10 @@ const statementGenerators = {
     },
     'change_to_next_shape': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.changeShapeNext();\n`;
+    },
+    'change_to_some_shape': (node, indent, context) => {
+        const shapeId = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`;
     },
     'add_effect_amount': (node, indent, context) => {
         const amount = generateExpression(node.arguments[0]);

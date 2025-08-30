@@ -80,8 +80,8 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
 const createWindow = () => {
     // 새로운 브라우저 창을 생성합니다.
     const win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 950,
+        height: 800,
         resizable: false,
         webPreferences: {
             // preload 스크립트 경로를 올바르게 지정합니다.
