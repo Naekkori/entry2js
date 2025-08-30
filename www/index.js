@@ -59,7 +59,7 @@ function SetCompilePath(textbox) {
 }
 async function OpenCompilerPath() {
     try {
-        // electronAPI.openCompilerPath가 Promise를 반환하고, 선택된 경로를 resolve한다고 가정합니다.
+        // electronAPI.openCompilerPath가 Promise를 반환
         const path = await window.electronAPI.openCompilerPath();
 
         // 사용자가 파일 선택을 취소하지 않은 경우(path가 존재할 경우)에만 경로를 업데이트합니다.
@@ -75,9 +75,10 @@ async function OpenCompilerPath() {
         alert(`컴파일러 경로를 여는 중 오류가 발생했습니다: ${err.message || err}`);
     }
 }
-window.onload = function () {
+window.onload = async function () {
     // 페이지 렌더링
     appContainer.innerHTML = home;
+    await getInfo();
     // 로컬스토리지 준비
     const byteCodePath = localStorage.getItem("BytecodePath");
     const byteCodeCompileStr = localStorage.getItem("ByteCodeCompile");
@@ -96,6 +97,11 @@ window.onload = function () {
         localStorage.setItem("ByteCodeCompile", false);
     }
 };
+async function getInfo() {
+    const returnInfo = await window.electronAPI.getProgramInfo();
+    const Info = document.getElementById("info");
+    Info.innerHTML = `이름: ${returnInfo.name}<br>버전: ${returnInfo.version}<br>설명: ${returnInfo.description}<br>작성자: ${returnInfo.author}<br>라이선스: ${returnInfo.license}`;
+}
 // 이벤트 위임을 사용하여 동적으로 생성되는 버튼도 처리
 document.body.addEventListener("click", async (event) => {
     const targetId = event.target.id || event.target.closest('button')?.id;

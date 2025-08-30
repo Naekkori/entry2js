@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {extractPlayEntryProject} from "./extract.mjs";
 import Transpiler from "./transpiler.mjs";
-
+import { readFileSync } from 'node:fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 ipcMain.handle('dialog:openFile', async () => {
@@ -37,6 +37,11 @@ ipcMain.handle('dialog:openCompilerPath', async () => {
     } else {
         return filePaths[0]; // 선택된 파일의 첫 번째 경로를 반환
     }
+});
+ipcMain.handle('info:get',async()=>{
+    const packageJson = readFileSync("package.json");
+    let parsed = JSON.parse(packageJson);
+    return parsed;
 });
 ipcMain.handle('conv:Start', async (event, filePath) => {
     if (!filePath) {

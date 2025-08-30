@@ -19,11 +19,13 @@
 
 .settings_window {
     background-color: #fff;
-    padding: 10px;
+    padding: 18px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 31em;
+    width: 36em;
     height: 25em;
+    display: flex; /* Flexbox 레이아웃 적용 */
+    flex-direction: column; /* 자식 요소들을 세로로 배치 */
 }
 
 .settings_window header {
@@ -37,13 +39,10 @@
 }
 
 .settings_content {
-    width: 20em;
-    height: 10em;
-    margin-top: 5%;
-    /* 화면 높이의 50%를 최대 높이로 설정 */
-    overflow-y: 10em;
+    flex-grow: 1; /* header를 제외한 나머지 모든 수직 공간을 차지하도록 설정 */
+    min-height: 0; /* flex-grow와 함께 사용할 때 넘침(overflow) 문제를 방지 */
+    overflow-y: auto;
     /* 내용이 넘칠 경우에만 세로 스크롤바 표시 */
-    /* 스크롤바가 내용과 겹치지 않도록 오른쪽에 약간의 여백을 줍니다. */
     padding-right: 0.5rem;
 }
 
