@@ -2,10 +2,12 @@ import { app, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractPlayEntryProject } from "./extract.mjs";
+import {ExcutionCompile} from "./compile_excution.mjs";
 import Transpiler from "./transpiler.mjs";
 import { readFileSync } from 'node:fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+var isCompile=false;
 ipcMain.handle('dialog:openFile', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
         title: '엔트리프로젝트 파일 을 선택하세요.',
@@ -66,8 +68,11 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
         await extractPlayEntryProject(filePath, outputDir, onProgress);
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
-        // TODO: 실제 변환프로세스
+        // 실제 변환프로세스
         await Transpiler(path.join(outputDir, 'project.json'), onProgress)
+        if (isCompile) {
+            //TODO: 구현필요
+        }
         onProgress('✅ 모든 작업이 성공적으로 완료되었습니다.');
         shell.showItemInFolder(outputDir);
         return { success: true, message: '변환 완료' };
