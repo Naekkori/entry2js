@@ -61,7 +61,7 @@
     <div class="settings_bg" id="setting_container">
         <div class="settings_window">
             <header>
-                <h1>설정</h1>
+                <h2>설정</h2>
                 <button type="button" aria-label="닫기" class="close_btn" onclick="closeSettings()">
                     <!-- SVG를 인라인으로 직접 삽입 -->
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
@@ -84,14 +84,15 @@
                     <tr>
                         <td>바이트코드 컴파일러 경로</td>
                         <td>
-                            <input type="file" name="bytecode_compiler_path" id="bytecode_compiler_path">
+                            <input type="text" placeholder="여기에 FastEntry.exe의 경로 입력" id="bytecode_compile_path" onchange="SetCompilePath(this)" disabled>
+                            <button type="button" id="bytecode_compile_btn" aria-label="컴파일러 경로 열기" disabled>열기</button>
                         </td>
                     </tr>
                 </table>
+                <cite>이 설정은 실시간 으로 저장됩니다.</cite>
             </div>
         </div>
     </div>
-    <!--
     <header class="app_header">
         <button type="button" id="setting_btn" aria-label="설정 열기"
             style="background: none; border: none; padding: 0; cursor: pointer;" onclick="openSettings()">
@@ -101,7 +102,6 @@
             </svg>
         </button>
     </header>
-    -->
     <div id="app"
         style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
         <h1>앱페이지</h1>

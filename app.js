@@ -22,6 +22,22 @@ ipcMain.handle('dialog:openFile', async () => {
         return filePaths[0]; // 선택된 파일의 첫 번째 경로를 반환
     }
 });
+ipcMain.handle('dialog:openCompilerPath', async () => {
+    const {canceled, filePaths} = await dialog.showOpenDialog({
+        title: '컴파일러 경로를 선택하세요.',
+        properties: ['openFile'],
+        filters: [
+            {name: '실행 파일', extensions: ['exe']},
+            {name: '모든 파일', extensions: ['*']}
+        ]
+    });
+
+    if (canceled) {
+        return null; // 사용자가 취소하면 null 반환
+    } else {
+        return filePaths[0]; // 선택된 파일의 첫 번째 경로를 반환
+    }
+});
 ipcMain.handle('conv:Start', async (event, filePath) => {
     if (!filePath) {
         return { success: false, message: '파일 경로가 없습니다.' };
