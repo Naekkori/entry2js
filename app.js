@@ -1,18 +1,18 @@
-import {app, ipcMain, dialog, BrowserWindow,shell} from 'electron';
+import { app, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
-import {extractPlayEntryProject} from "./extract.mjs";
+import { fileURLToPath } from 'node:url';
+import { extractPlayEntryProject } from "./extract.mjs";
 import Transpiler from "./transpiler.mjs";
 import { readFileSync } from 'node:fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 ipcMain.handle('dialog:openFile', async () => {
-    const {canceled, filePaths} = await dialog.showOpenDialog({
+    const { canceled, filePaths } = await dialog.showOpenDialog({
         title: '엔트리프로젝트 파일 을 선택하세요.',
         properties: ['openFile'],
         filters: [
-            {name: '엔트리프로젝트', extensions: ['ent']},
-            {name: '모든 파일', extensions: ['*']}
+            { name: '엔트리프로젝트', extensions: ['ent'] },
+            { name: '모든 파일', extensions: ['*'] }
         ]
     });
 
@@ -23,12 +23,12 @@ ipcMain.handle('dialog:openFile', async () => {
     }
 });
 ipcMain.handle('dialog:openCompilerPath', async () => {
-    const {canceled, filePaths} = await dialog.showOpenDialog({
+    const { canceled, filePaths } = await dialog.showOpenDialog({
         title: '컴파일러 경로를 선택하세요.',
         properties: ['openFile'],
         filters: [
-            {name: '실행 파일', extensions: ['exe']},
-            {name: '모든 파일', extensions: ['*']}
+            { name: '실행 파일', extensions: ['exe'] },
+            { name: '모든 파일', extensions: ['*'] }
         ]
     });
 
@@ -38,10 +38,12 @@ ipcMain.handle('dialog:openCompilerPath', async () => {
         return filePaths[0]; // 선택된 파일의 첫 번째 경로를 반환
     }
 });
-ipcMain.handle('info:get',async()=>{
-    const packageJson = readFileSync("package.json");
-    let parsed = JSON.parse(packageJson);
-    return parsed;
+ipcMain.handle('info:get', async () => {
+    const packageJsonPath = path.join(__dirname, 'package.json');
+    console.log('package.json 경로:', packageJsonPath);
+    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+    const packageInfo = JSON.parse(packageJsonContent);
+    return packageInfo;
 });
 ipcMain.handle('conv:Start', async (event, filePath) => {
     if (!filePath) {
@@ -65,7 +67,7 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
         // TODO: 실제 변환프로세스
-        await Transpiler(path.join(outputDir, 'project.json'),onProgress)
+        await Transpiler(path.join(outputDir, 'project.json'), onProgress)
         onProgress('✅ 모든 작업이 성공적으로 완료되었습니다.');
         shell.showItemInFolder(outputDir);
         return { success: true, message: '변환 완료' };
@@ -85,15 +87,15 @@ const createWindow = () => {
             // preload 스크립트 경로를 올바르게 지정합니다.
             preload: path.join(__dirname, 'preload.js')
         },
-        icon:path.join(__dirname,'assets/icons/png/icon.png')
+        icon: path.join(__dirname, 'assets/icons/png/icon.png')
     });
 
     // index.html 파일을 창으로 불러옵니다.
     win.loadFile('www/index.html');
     win.setMenu(null);
     // (선택사항) 개발자 도구를 엽니다.
-    win.webContents.on('before-input-event', (event,input) => {
-        if (input.key==="F12"){
+    win.webContents.on('before-input-event', (event, input) => {
+        if (input.key === "F12") {
             win.webContents.openDevTools();
             event.preventDefault();
         }
