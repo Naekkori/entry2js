@@ -690,7 +690,12 @@ const statementGenerators = {
         const list = generateExpression(node.arguments[0]);
         const index = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}Entry.valueOfIndexList(${list},${index});\n`;
-    }
+    },
+    'add_value_to_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        const value = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.addValueToList(${list},${value});\n`;
+    },
 };
 
 function generateStatement(node, indent = 0, context = {}) {
