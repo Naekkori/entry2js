@@ -133,7 +133,7 @@
 ## 리스트
 
 - [x] **`value_of_index_from_list` (리스트 항목 값)**: 특정 인덱스 항목 값 가져오기
-- [ ] **`add_value_to_list` (리스트에 항목 추가)**: 맨 뒤에 항목 추가
+- [x] **`add_value_to_list` (리스트에 항목 추가)**: 맨 뒤에 항목 추가
 - [ ] **`remove_value_from_list` (리스트에서 항목 삭제)**: 특정 인덱스 항목 삭제
 - [ ] **`insert_value_to_list` (리스트에 항목 삽입)**: 특정 인덱스에 항목 삽입
 - [ ] **`change_value_list_index` (리스트 항목 값 바꾸기)**: 특정 인덱스 항목 값 변경
