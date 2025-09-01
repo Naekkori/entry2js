@@ -903,6 +903,17 @@ function generateExpression(arg) {
                 return `(${bop1} || ${bop2})`;
             }
         }
+        case 'boolean_not':{
+            const bop = generateExpression(arg.arguments[0]);
+            return `!${bop}`;
+        }
+        case 'is_boost_mode':{
+            return 'Entry.isBoostMode()';
+        }
+        case 'is_current_device_type':{
+            const deviceType = generateExpression(arg.arguments[0]);
+            return `Entry.isCurrentDeviceType(${deviceType})`;
+        }
         // 리소스게터
         case 'get_pictures':{
             const picParam = generateExpression(arg.arguments[0]);
