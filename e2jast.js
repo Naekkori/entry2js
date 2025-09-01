@@ -728,6 +728,27 @@ const statementGenerators = {
     },
     'remove_all_clones':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.removeAllClones();\n`;
+    },
+    'text_write':(node,indent,context)=>{
+        const text = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textWrite(${text});\n`;
+    },
+    'text_append':(node,indent,context)=>{
+        const text = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textAppend(${text});\n`;
+    },
+    'text_prepend':(node,indent,context)=>{
+        const text = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textPrepend(${text});\n`;
+    },
+    'text_change_effect':(node,indent,context)=>{
+        const effect = generateExpression(node.arguments[0]);
+        const mod = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.textChangeEffect(${effect},${mod});\n}`;
+    },
+    'text_change_font':(node,indent,context)=>{
+        const font = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textChangeFont(${font});\n`;
     }
 };
 
@@ -907,6 +928,9 @@ function generateExpression(arg) {
             const bop = generateExpression(arg.arguments[0]);
             return `!${bop}`;
         }
+        case 'is_touch_supported':{
+            return 'Entry.isTouchSupported()';
+        }
         case 'is_boost_mode':{
             return 'Entry.isBoostMode()';
         }
@@ -930,6 +954,11 @@ function generateExpression(arg) {
         case 'text_color':{
             const colorParam = generateExpression(arg.arguments[0]);
             return colorParam;
+        }
+        // 글상자
+        case 'text_read':{
+            const text = generateExpression(arg.arguments[0]);
+            return `Entry.textRead(${text})`;
         }
         // 대답 가져오기
         case 'get_canvas_input_value': {
