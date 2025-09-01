@@ -166,11 +166,11 @@
 
 - [x] **`is_clicked`**: 마우스가 클릭되었는지 판단
 - [x] **`is_object_clicked`**: 특정 오브젝트가 클릭되었는지 판단
-- [ ] **`is_press_some_key`**: 특정 키가 눌렸는지 판단
-- [ ] **`reach_something`**: 특정 대상(벽, 마우스 포인터, 다른 오브젝트)에 닿았는지 판단
-- [ ] **`is_type`**: 주어진 값의 타입(숫자, 영어, 한글)이 일치하는지 판단
+- [x] **`is_press_some_key`**: 특정 키가 눌렸는지 판단
+- [x] **`reach_something`**: 특정 대상(벽, 마우스 포인터, 다른 오브젝트)에 닿았는지 판단
+- [x] **`is_type`**: 주어진 값의 타입(숫자, 영어, 한글)이 일치하는지 판단
 - [x] **`boolean_basic_operator`**: 두 값의 관계(같음, 다름, 큼, 작음, 크거나 같음, 작거나 같음)를 판단
-- [ ] **`boolean_and_or`**: 두 불리언 값에 대해 AND 또는 OR 연산을 수행
+- [x] **`boolean_and_or`**: 두 불리언 값에 대해 AND 또는 OR 연산을 수행
 - [ ] **`boolean_not`**: 불리언 값에 대해 NOT 연산을 수행
 - [ ] **`is_boost_mode`**: 현재 부스트 모드(WebGL 사용 여부)인지 판단
 - [ ] **`is_current_device_type`**: 현재 장치 유형(데스크톱, 태블릿, 스마트폰)이 일치하는지 판단

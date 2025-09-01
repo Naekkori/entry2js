@@ -2,7 +2,7 @@ import { app, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractPlayEntryProject } from "./extract.mjs";
-import {ExcutionCompile} from "./compile_excution.mjs";
+import ExcutionCompile from "./compile_excution.mjs";
 import Transpiler from "./transpiler.mjs";
 import { readFileSync } from 'node:fs';
 const __filename = fileURLToPath(import.meta.url);

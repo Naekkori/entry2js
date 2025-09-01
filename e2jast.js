@@ -884,6 +884,42 @@ function generateExpression(arg) {
             const keycode = generateExpression(arg.arguments[0]);
             return `Entry.isPressSomeKey(${keycode})`;
         }
+        case 'reach_something':{
+            const Something = generateExpression(arg.arguments[0]);
+            return `Entry.reachSomething(${Something})`;
+        }
+        case 'is_type':{
+            const value = generateExpression(arg.arguments[0]);
+            const type = generateExpression(arg.arguments[1]);
+            return `Entry.isType(${value},${type})`;
+        }
+        case 'boolean_and_or':{
+            const bop1 = generateExpression(arg.arguments[0]);
+            const op = arg.arguments[1];
+            const bop2 = generateExpression(arg.arguments[2]);
+            if (op==='AND') {
+                return `(${bop1} && ${bop2})`;
+            } else if (op==='OR') {
+                return `(${bop1} || ${bop2})`;
+            }
+        }
+        // 리소스게터
+        case 'get_pictures':{
+            const picParam = generateExpression(arg.arguments[0]);
+            return picParam;
+        }
+        case 'get_sounds':{
+            const soundParam = generateExpression(arg.arguments[0]);
+            return soundParam;
+        }
+        case 'angle':{
+            const angleParam = generateExpression(arg.arguments[0]);
+            return angleParam;
+        }
+        case 'text_color':{
+            const colorParam = generateExpression(arg.arguments[0]);
+            return colorParam;
+        }
         // 대답 가져오기
         case 'get_canvas_input_value': {
             return 'Entry.getCanvasInputValue()';
