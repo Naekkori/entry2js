@@ -134,38 +134,38 @@
 
 - [x] **`value_of_index_from_list` (리스트 항목 값)**: 특정 인덱스 항목 값 가져오기
 - [x] **`add_value_to_list` (리스트에 항목 추가)**: 맨 뒤에 항목 추가
-- [ ] **`remove_value_from_list` (리스트에서 항목 삭제)**: 특정 인덱스 항목 삭제
-- [ ] **`insert_value_to_list` (리스트에 항목 삽입)**: 특정 인덱스에 항목 삽입
-- [ ] **`change_value_list_index` (리스트 항목 값 바꾸기)**: 특정 인덱스 항목 값 변경
-- [ ] **`length_of_list` (리스트 길이)**: 리스트 항목 수 가져오기
-- [ ] **`is_included_in_list` (리스트에 항목 포함 여부)**: 값 포함 여부 확인
-- [ ] **`show_list` (리스트 보이기)**: 리스트 UI 표시
-- [ ] **`hide_list` (리스트 숨기기)**: 리스트 UI 숨김
+- [x] **`remove_value_from_list` (리스트에서 항목 삭제)**: 특정 인덱스 항목 삭제
+- [x] **`insert_value_to_list` (리스트에 항목 삽입)**: 특정 인덱스에 항목 삽입
+- [x] **`change_value_list_index` (리스트 항목 값 바꾸기)**: 특정 인덱스 항목 값 변경
+- [x] **`length_of_list` (리스트 길이)**: 리스트 항목 수 가져오기
+- [x] **`is_included_in_list` (리스트에 항목 포함 여부)**: 값 포함 여부 확인
+- [x] **`show_list` (리스트 보이기)**: 리스트 UI 표시
+- [x] **`hide_list` (리스트 숨기기)**: 리스트 UI 숨김
 
 ## 흐름 블록 구현
 
-- [ ] wait_second (~초 기다리기)
+- [x] wait_second (~초 기다리기)
 - [x] repeat_basic (~번 반복하기)
 - [x] repeat_inf (계속 반복하기)
 - [x] repeat_while_true (~가 될 때까지/동안 반복하기)
 - [x] stop_repeat (반복 중단하기)
-- [ ] continue_repeat (반복 처음으로 돌아가기)
+- [x] continue_repeat (반복 처음으로 돌아가기)
 - [x] _if (만일 ~이라면)
 - [x] if_else (만일 ~이라면, 아니면)
 - [x] wait_until_true (~가 될 때까지 기다리기)
 - [x] stop_object (모든/자신/다른/이 스크립트 멈추기)
-- [ ] restart_project (처음부터 다시 실행하기)
+- [x] restart_project (처음부터 다시 실행하기)
 - [x] **`start_scene`**: (장면) 시작하기
 - [x] **`start_neighbor_scene`**: 이전/다음 장면 시작하기
 - [x] when_clone_start (복제되었을 때)
 - [x] create_clone (~의 복제본 만들기)
 - [x] delete_clone (이 복제본 삭제하기)
-- [ ] remove_all_clones (모든 복제본 삭제하기)
+- [x] remove_all_clones (모든 복제본 삭제하기)
 
 ## 판단 블록 구현
 
-- [ ] **`is_clicked`**: 마우스가 클릭되었는지 판단
-- [ ] **`is_object_clicked`**: 특정 오브젝트가 클릭되었는지 판단
+- [x] **`is_clicked`**: 마우스가 클릭되었는지 판단
+- [x] **`is_object_clicked`**: 특정 오브젝트가 클릭되었는지 판단
 - [ ] **`is_press_some_key`**: 특정 키가 눌렸는지 판단
 - [ ] **`reach_something`**: 특정 대상(벽, 마우스 포인터, 다른 오브젝트)에 닿았는지 판단
 - [ ] **`is_type`**: 주어진 값의 타입(숫자, 영어, 한글)이 일치하는지 판단

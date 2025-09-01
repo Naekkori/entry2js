@@ -686,16 +686,49 @@ const statementGenerators = {
         const variableID = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.hideVariable(${variableID});\n`;
     },
-    'value_of_index_from_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        const index = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.valueOfIndexList(${list},${index});\n`;
-    },
     'add_value_to_list':(node,indent,context)=>{
         const list = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.addValueToList(${list},${value});\n`;
+        return `${' '.repeat(indent)}Entry.variableContainer.addValueToList(${list},${value});\n`;
     },
+    'remove_value_from_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        const index = generateExpression(node.arguments[1]);
+        return `${' '.repeat(indent)}Entry.variableContainer.removeValueFromList(${list},${index});\n`;
+    },
+    'insert_value_to_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        const index = generateExpression(node.arguments[1]);
+        const value = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.variableContainer.insertValueToList(${list},${index},${value});\n`;
+    },
+    'change_value_list_index':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        const index = generateExpression(node.arguments[1]);
+        const value = generateExpression(node.arguments[2]);
+        return `${' '.repeat(indent)}Entry.variableContainer.changeValueListIndex(${list},${index},${value});\n`;
+    },
+    'show_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.showList(${list});\n`;
+    },
+    'hide_list':(node,indent,context)=>{
+        const list = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.hideList(${list});\n`;
+    },
+    'wait_second':(node,indent,context)=>{
+        const second = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.waitSecond(${second});\n`;
+    },
+    'continue_repeat':(node,indent,context)=>{
+        return `${' '.repeat(indent)}continue;\n`;
+    },
+    'restart_project':(node,indent,context)=>{
+        return `${' '.repeat(indent)}restartProject();\n`;
+    },
+    'remove_all_clones':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.removeAllClones();\n`;
+    }
 };
 
 function generateStatement(node, indent = 0, context = {}) {
@@ -823,6 +856,33 @@ function generateExpression(arg) {
         case 'change_hex_to_rgb': {
             const hex = generateExpression(arg.arguments[0]);
             return `Entry.hexToRgb(${hex})`;
+        }
+        // 리스트
+        case 'value_of_index_from_list': {
+            const listId = generateExpression(arg.arguments[0]);
+            const index = generateExpression(arg.arguments[1]);
+            return `Entry.variableContainer.valueOfIndexList(${listId},${index})`;
+        }
+        case 'length_of_list':{
+            const listId = generateExpression(arg.arguments[0]);
+            return `Entry.variableContainer.lengthOfList(${listId})`;
+        }
+        case 'is_included_in_list':{
+            const listId = generateExpression(arg.arguments[0]);
+            const value = generateExpression(arg.arguments[1]);
+            return `Entry.variableContainer.isIncludedInList(${listId},${value})`;
+        }
+        // 판단
+        case 'is_clicked': {
+            return 'Entry.isClicked()';
+        }
+        case 'is_object_clicked':{
+            const objecId = generateExpression(arg.arguments[0]);
+            return `Entry.isObjectClicked(${objecId})`;
+        }
+        case 'is_press_some_key':{
+            const keycode = generateExpression(arg.arguments[0]);
+            return `Entry.isPressSomeKey(${keycode})`;
         }
         // 대답 가져오기
         case 'get_canvas_input_value': {
