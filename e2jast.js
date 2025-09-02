@@ -749,7 +749,18 @@ const statementGenerators = {
     'text_change_font':(node,indent,context)=>{
         const font = generateExpression(node.arguments[0]);
         return `${' '.repeat(indent)}Entry.textChangeFont(${font});\n`;
-    }
+    },
+    'text_change_font_color':(node,indent,context)=>{
+        const color = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textChangeFontColor(${color});\n`;
+    },
+    'text_change_bg_color':(node,indent,context)=>{
+        const color = generateExpression(node.arguments[0]);
+        return `${' '.repeat(indent)}Entry.textChangeFontBGColor(${color});\n`;
+    },
+    'text_flush':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.textFlush();\n`;
+    },
 };
 
 function generateStatement(node, indent = 0, context = {}) {

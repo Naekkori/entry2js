@@ -186,6 +186,6 @@
 - [x] **`text_prepend`**: (글상자)에 (내용) 앞에 이어 쓰기
 - [x] **`text_change_effect`**: (글상자)에 (효과) (적용/해제)하기
 - [x] **`text_change_font`**: (글상자)의 글꼴을 (글꼴)로 바꾸기
-- [ ] **`text_change_font_color`**: (글상자)의 글자 색을 (색)으로 바꾸기
-- [ ] **`text_change_bg_color`**: (글상자)의 배경색을 (색)으로 바꾸기
-- [ ] **`text_flush`**: (글상자)의 글 모두 지우기
+- [x] **`text_change_font_color`**: (글상자)의 글자 색을 (색)으로 바꾸기
+- [x] **`text_change_bg_color`**: (글상자)의 배경색을 (색)으로 바꾸기
+- [x] **`text_flush`**: (글상자)의 글 모두 지우기
