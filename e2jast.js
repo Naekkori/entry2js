@@ -718,7 +718,7 @@ const statementGenerators = {
     },
     'wait_second':(node,indent,context)=>{
         const second = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.waitSecond(${second});\n`;
+        return `${' '.repeat(indent)}Entry.waitSeconds(${second});\n`;
     },
     'continue_repeat':(node,indent,context)=>{
         return `${' '.repeat(indent)}continue;\n`;
