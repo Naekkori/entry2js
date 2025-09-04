@@ -797,7 +797,6 @@ function generateExpression(arg) {
         
           if (s.trim() !== '' && (isRadixLiteral || Number.isFinite(Number(s)))) {
             if (isRadixLiteral) {
-              // 원본 유지(정책상 decimal로 통일하려면 Number(s) 후 String(n)으로 바꾸세요)
               return s;
             }
             const n = Number(s);
