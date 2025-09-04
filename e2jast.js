@@ -786,14 +786,26 @@ function generateExpression(arg) {
     // 인자가 값을 반환하는 블록일 경우
     switch (arg.type) {
         case 'text': {
-            const textValue = (arg.arguments && arg.arguments[0]) || '';
-            // isFinite는 공백 문자열을 0으로 취급하므로, 비어있지 않은지 확인합니다.
-            // 또한, isFinite는 " 123 "과 같은 공백이 있는 숫자도 true로 반환합니다.
-            // JavaScript의 자동 타입 변환과 일치하므로 이 동작은 괜찮습니다.
-            if (textValue.trim() !== '' && isFinite(textValue)) {
-                return textValue; // 숫자와 유사한 문자열은 숫자 리터럴로 반환
+          const raw = arg.arguments?.[0];
+          const s = String(raw);
+        
+          // 진법 리터럴(0x, 0o, 0b)은 원형 유지할지 여부를 정책으로 결정
+          const isRadixLiteral =
+            /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
+            /^[-+]?0[oO][0-7]+$/.test(s) ||
+            /^[-+]?0[bB][01]+$/.test(s);
+        
+          if (s.trim() !== '' && (isRadixLiteral || Number.isFinite(Number(s)))) {
+            if (isRadixLiteral) {
+              // 원본 유지(정책상 decimal로 통일하려면 Number(s) 후 String(n)으로 바꾸세요)
+              return s;
             }
-            return JSON.stringify(textValue); // 그 외에는 문자열 리터럴로 반환
+            const n = Number(s);
+            // -0 보존
+            return Object.is(n, -0) ? '-0' : String(n); // 선행 0, 공백 등 정규화
+          }
+        
+          return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
         }
         case 'number': return String(arg.arguments[0] || 0);
         // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
