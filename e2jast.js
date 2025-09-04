@@ -999,7 +999,11 @@ function generateExpression(arg) {
         }
         case 'coordinate_mouse': {
             const prop = generateExpression(arg.arguments[0]);
-            return `Entry.getMouseCoords(${prop})`;
+            if (prop==='x') {
+                return `Entry.getMouseCoords().x`;   
+            }else{
+                return `Entry.getMouseCoords().y`;
+            }
         }
         case 'quotient_and_mod': {
             const left = generateExpression(arg.arguments[0]);
