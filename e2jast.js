@@ -672,7 +672,7 @@ const statementGenerators = {
     },
     'ask_and_wait': (node, indent, context) => {
         const question = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.askAndWait(${question});\n`;
+        return `${' '.repeat(indent)}await Entry.askAndWait(${question});\n`;
     },
     'set_visible_answer': (node, indent, context) => {
         const visible = generateExpression(node.arguments[0]);
