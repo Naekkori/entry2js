@@ -512,12 +512,13 @@ const statementGenerators = {
         return code;
     },
     'repeat_inf': (node, indent, context) => {
-        let code = `${' '.repeat(indent)}while (true) {\n`;
+        let code = `${' '.repeat(indent)}Entry.on('inf_loop', async () => {
+`;
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}});
+`;
         return code;
     },
     'repeat_basic': (node, indent, context) => {
