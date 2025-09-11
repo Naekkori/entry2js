@@ -517,6 +517,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
+        code += `${' '.repeat(indent)}await Entry.deltaTimeDelay();\n`;
         code += `${' '.repeat(indent)}});
 `;
         return code;
