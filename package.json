@@ -20,14 +20,6 @@
     "directories": {
       "output": "dist"
     },
-    "files": [
-      "assets/**/*",
-      "www/**/*",
-      "*.js",
-      "transpiler.mjs",
-      "transpiler-worker.mjs",
-      "package.json"
-    ],
     "win": {
       "icon": "assets/icons/win/icon.ico",
       "target": "nsis"
