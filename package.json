@@ -4,9 +4,15 @@
   "description": "Entry Project to FastEntry javascript transpiler",
   "main": "app.js",
   "type": "module",
-  "scripts": {
+ "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "build:osx": "electron-builder --mac",
+    "build:linux": "npm run build:linux32 && npm run build:linux64",
+    "build:linux32": "electron-builder --linux --ia32",
+    "build:linux64": "electron-builder --linux --x64",
+    "build:win": "npm run build:win32 && npm run build:win64",
+    "build:win32": "electron-builder --win portable --ia32",
+    "build:win64": "electron-builder --win portable --x64"
   },
   "build": {
     "appId": "com.kkori.entry2js",
