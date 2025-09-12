@@ -24,19 +24,20 @@
       "assets/**/*",
       "www/**/*",
       "*.js",
-      "*.mjs",
+      "transpiler.mjs",
+      "transpiler-worker.mjs",
       "package.json"
     ],
     "win": {
-      "icon": "build/icon.ico",
+      "icon": "assets/icons/win/icon.ico",
       "target": "nsis"
     },
     "mac": {
-      "icon": "build/icon.icns",
+      "icon": "assets/icons/mac/icon.icns",
       "target": "dmg"
     },
     "linux": {
-      "icon": "build/icon.png",
+      "icon": "assets/icons/png/icon.png",
       "target": "AppImage"
     }
   },
