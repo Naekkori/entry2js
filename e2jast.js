@@ -613,7 +613,7 @@ const statementGenerators = {
         return `${' '.repeat(indent)}Entry.setAngle(${angle});\n`;
     },
     'change_to_next_shape': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.changeShapeNext();\n`;
+        return `${' '.repeat(indent)}Entry.changeShapeNext("next");\n`;
     },
     'change_to_some_shape': (node, indent, context) => {
         const shapeId = generateExpression(node.arguments[0]);
