@@ -25,7 +25,6 @@
       "preload.js",
       "extract.mjs",
       "transpiler.mjs",
-      "transpiler-worker.mjs",
       "compile_excution.mjs",
       "e2jast.js",
       "www/**/*"

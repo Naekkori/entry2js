@@ -14,9 +14,11 @@ function transpileInWorker(script, onProgress, timeout = 5000) {
     const workerIndex = state.started;
 
     const promise = new Promise((resolve, reject) => {
-        const worker = new Worker('./transpiler-worker.mjs', {
-            workerData: { script }
-        });
+        const workerPath = app.isPackaged
+            ? path.join(process.resourcesPath, 'transpiler-worker.mjs')
+            : path.join(__dirname, 'resources/transpiler-worker.mjs'); // 개발 환경 경로
+
+        const worker = new Worker(workerPath);
         worker.on('message', (result) => {
             switch (result.status) {
                 case 'progress':
