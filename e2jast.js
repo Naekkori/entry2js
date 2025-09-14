@@ -569,12 +569,12 @@ const statementGenerators = {
     'set_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.setVariable(${varid}, ${value});\n`;
+        return `${' '.repeat(indent)}Entry.variableContainer.setVariable(${varid}, ${value});\n`;
     },
     'change_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.changeVariable(${varid}, ${value});\n`;
+        return `${' '.repeat(indent)}Entry.variableContainer.changeVariable(${varid}, ${value});\n`;
     },
     'start_scene': (node, indent, context) => {
         const sceneId = generateExpression(node.arguments[0]);
@@ -1057,7 +1057,7 @@ function generateExpression(arg) {
         }
         case 'get_variable': {
             const varid = generateExpression(arg.arguments[0]);
-            return `Entry.getVariable(${varid})`;
+            return `Entry.variableContainer.getVariable(${varid})`;
         }
         case 'function_param_string':
         case 'function_param_boolean': {
