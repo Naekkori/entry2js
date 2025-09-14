@@ -1,6 +1,11 @@
 import fs from "fs";
 import path from "node:path";
 import { Worker } from 'worker_threads';
+import { app } from 'electron';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function transpileInWorker(script, onProgress, timeout = 5000) {
     if (transpileInWorker.state === undefined) {
@@ -14,11 +19,11 @@ function transpileInWorker(script, onProgress, timeout = 5000) {
     const workerIndex = state.started;
 
     const promise = new Promise((resolve, reject) => {
-        const workerPath = app.isPackaged
-            ? path.join(process.resourcesPath, 'transpiler-worker.mjs')
-            : path.join(__dirname, 'resources/transpiler-worker.mjs'); // 개발 환경 경로
+        // app.asar 내부에 포함된 워커 파일을 __dirname을 기준으로 찾습니다.
+        // 개발 및 패키징 환경 모두에서 동일하게 작동합니다.
+        const workerPath = path.join(__dirname, 'transpiler-worker.mjs');
 
-        const worker = new Worker(workerPath);
+        const worker = new Worker(workerPath, { workerData: { script } });
         worker.on('message', (result) => {
             switch (result.status) {
                 case 'progress':

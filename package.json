@@ -24,13 +24,11 @@
       "app.js",
       "preload.js",
       "extract.mjs",
-      "transpiler.mjs",
       "compile_excution.mjs",
+      "transpiler.mjs",
+      "www/**/*",
       "e2jast.js",
-      "www/**/*"
-    ],
-    "extraResources": [
-      "./resources/**"
+      "transpiler-worker.mjs"
     ],
     "win": {
       "icon": "assets/icons/win/icon.ico",

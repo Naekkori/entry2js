@@ -1,7 +1,13 @@
 import fs from "fs";
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const packageJsonPath = path.join(__dirname, 'package.json');
+
+const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 const HEADER = `
 /*
 

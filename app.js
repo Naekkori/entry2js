@@ -41,10 +41,13 @@ ipcMain.handle('dialog:openCompilerPath', async () => {
     }
 });
 ipcMain.handle('info:get', async () => {
-    const packageJsonPath = path.join(__dirname, 'package.json');
-    console.log('package.json 경로:', packageJsonPath);
-    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
-    const packageInfo = JSON.parse(packageJsonContent);
+    const packageInfo ={
+        name: app.getName(),
+        version: app.getVersion(),
+        description: '엔트리 프로젝트를 자바스크립트로 변환하는 도구입니다.',
+        author: '내꼬리',
+        license: 'MIT'
+    }
     return packageInfo;
 });
 ipcMain.handle('conv:Start', async (event, filePath) => {

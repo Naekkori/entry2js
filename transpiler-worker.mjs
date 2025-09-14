@@ -1,5 +1,5 @@
 import { parentPort, workerData } from 'worker_threads';
-import { codeGen, test_ast } from '../e2jast.js';
+import { codeGen, test_ast } from './e2jast.js';
 
 const { script } = workerData;
 
