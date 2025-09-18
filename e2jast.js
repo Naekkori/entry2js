@@ -518,11 +518,15 @@ const statementGenerators = {
         return code;
     },
     'repeat_inf': (node, indent, context) => {
-        let code = `${' '.repeat(indent)}while(true) {\n`;
+        let bodyCode = '';
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4, context);
+            bodyCode += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        let code = `${' '.repeat(indent)}while(true) {\n`;
+        code += bodyCode;
+        if (!bodyCode.includes('await')) {
+            code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        }
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -531,21 +535,29 @@ const statementGenerators = {
         const loopVar = `fe_loop_${loopLevel}`; // 항상 고유한 이름 생성
         const newContext = { ...context, loopLevel: loopLevel + 1 };
         const count = generateExpression(node.arguments[0]);
-        let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
+        let bodyCode = '';
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4, newContext);
+            bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
-        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
+        code += bodyCode;
+        if (!bodyCode.includes('await')) {
+            code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        }
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
     'repeat_while_true': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
-        let code = `${' '.repeat(indent)}while (${condition}) {\n`;
+        let bodyCode = '';
         node.statements[0]?.forEach(stmt => {
-            code += generateStatement(stmt, indent + 4, context);
+            bodyCode += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        let code = `${' '.repeat(indent)}while (${condition}) {\n`;
+        code += bodyCode;
+        if (!bodyCode.includes('await')) {
+            code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
+        }
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
