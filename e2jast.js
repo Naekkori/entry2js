@@ -339,9 +339,7 @@ function generateEventHandler(node, config) {
         code += `${' '.repeat(currentIndent)}}\n`;
     }
 
-    code += `});
-
-`;
+    code += `});\n`;
     return code;
 }
 /**
