@@ -28,7 +28,7 @@ This is code that works in FastEntry
 // Helper to create a valid JS identifier from Entry IDs
 function toJsId(id) {
     if (!id) return `invalid_id_${uuidv4().replace(/-/g, '')}`;
-    return `var_${id.replace(/[\W]/g, '_')}`;
+    return `var_${id.replace(/[\][\W]/g, '_')}`;
 }
 
 // Helper to get parameter name from its definition block
@@ -37,8 +37,6 @@ function getParamName(paramBlock) {
     // e.g., function_param_string_abc123
     return toJsId(paramBlock.type);
 }
-
-
 /**
  * 엔트리 스크립트 JSON 문자열을 받아 AST(추상 구문 트리)를 생성합니다.
  * @param {string} entryScript - 파싱할 스크립트 JSON 문자열
@@ -239,15 +237,19 @@ function codeGen(ast) {
             if (node.type === "FunctionDefinition") {
                 const funcName = `func_${node.id}`;
                 const params = node.params.join(', ');
-                generatedCode += `async function ${funcName}(${params}) {\n`;
+                generatedCode += `async function ${funcName}(${params}) {
+`;
                 // 로컬 변수 선언
                 if (node.localVariables.length > 0) {
-                    generatedCode += `    let ${node.localVariables.join(', ')};\n`;
+                    generatedCode += `    let ${node.localVariables.join(', ')};
+`;
                 }
                 node.body.forEach(blockNode => {
                     generatedCode += generateStatement(blockNode, 4);
                 });
-                generatedCode += `}\n\n`;
+                generatedCode += `}
+
+`;
             }
         });
     }
@@ -258,7 +260,9 @@ function codeGen(ast) {
                 if (config) {
                     generatedCode += generateEventHandler(node, config);
                 } else {
-                    generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현\n\n`;
+                    generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현
+
+`;
                 }
             }
             // FunctionDefinition은 이미 위에서 처리했으므로 여기서는 건너뜁니다.
@@ -302,22 +306,42 @@ function generateEventHandler(node, config) {
     if (config.conditionBuilder) {
         condition = config.conditionBuilder(node.arguments);
         if (condition === null) {
-            return `// INFO: 'when_${node.eventName}' block with invalid arguments was skipped.\n\n`;
+            return `// INFO: 'when_${node.eventName}' block with invalid arguments was skipped.\n`;
         }
     }
 
+    let currentIndent = 0;
     code += `Entry.on('${config.event}', async (${param}) => {\n`;
-    if (condition) {
-        code += `${' '.repeat(2)}if (${condition}) {\n`;
+    currentIndent += 2; // Indent for the event handler body
+
+    if (config.event === "clone_start" || config.event === "clone_created") {
+        code += `${' '.repeat(currentIndent)}if (Entry.isClone()) {\n`;
+        currentIndent += 2; // Indent for the Entry.isClone() block
     }
 
-    const bodyIndent = 2 + (config.indent || 0);
+    if (condition) {
+        code += `${' '.repeat(currentIndent)}if (${condition}) {\n`;
+        currentIndent += 2; // Indent for the condition block
+    }
+
+    const bodyIndent = currentIndent + (config.indent || 0);
     node.handlerBody.forEach(blockNode => {
         code += generateStatement(blockNode, bodyIndent);
     });
 
-    if (condition) code += `${' '.repeat(2)}}\n`;
-    code += `});\n\n`;
+    if (condition) {
+        currentIndent -= 2; // De-indent for the condition block
+        code += `${' '.repeat(currentIndent)}}\n`;
+    }
+
+    if (config.event === "clone_start" || config.event === "clone_created") {
+        currentIndent -= 2; // De-indent for the Entry.isClone() block
+        code += `${' '.repeat(currentIndent)}}\n`;
+    }
+
+    code += `});
+
+`;
     return code;
 }
 /**
@@ -501,7 +525,8 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}}
+`;
         return code;
     },
     'if_else': (node, indent, context) => {
@@ -514,7 +539,8 @@ const statementGenerators = {
         node.statements[1]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}}
+`;
         return code;
     },
     'repeat_inf': (node, indent, context) => {
@@ -527,7 +553,8 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}}
+`;
         return code;
     },
     'repeat_basic': (node, indent, context) => {
@@ -544,7 +571,8 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}}
+`;
         return code;
     },
     'repeat_while_true': (node, indent, context) => {
@@ -558,7 +586,8 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}\n`;
+        code += `${' '.repeat(indent)}}
+`;
         return code;
     },
     'stop_repeat': (node, indent, context) => {
