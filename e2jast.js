@@ -659,8 +659,8 @@ const statementGenerators = {
         return `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`;
     },
     'add_effect_amount': (node, indent, context) => {
-        const amount = generateExpression(node.arguments[0]);
-        const effect = generateExpression(node.arguments[1]);
+        const effect = generateExpression(node.arguments[0]);
+        const amount = generateExpression(node.arguments[1]);
         return `${' '.repeat(indent)}Entry.addEffectAmount(${effect}, ${amount});\n`;
     },
     'change_scale_size': (node, indent, context) => {
