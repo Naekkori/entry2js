@@ -721,7 +721,16 @@ const statementGenerators = {
 };
 
 function generateStatement(node, indent = 0, context = {}) {
-    const generator = statementGenerators[node.type];
+    let generator = statementGenerators[node.type];
+
+    // Handle dynamic function call blocks (e.g., 'func_abcdef')
+    if (!generator && node.type.startsWith('func_')) {
+        generator = (node, indent, context) => {
+            const funcName = `func_${node.funcId || node.type.substring(5)}`;
+            const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
+            return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
+        };
+    }
     return generator ? generator(node, indent, context) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
 }
 
