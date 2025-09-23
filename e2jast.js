@@ -432,7 +432,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`
     ),
     'move_to_angle': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
-        `${' '.repeat(indent)}Entry.moveToangle(${angle});`
+        `${' '.repeat(indent)}Entry.moveToangle(${angle});\n`
     ),
     'sound_something_with_block': createSafeStatementGenerator([0], (node, indent, context, [soundId]) =>
         `${' '.repeat(indent)}Entry.playSound(${soundId});\n`
@@ -496,8 +496,7 @@ const statementGenerators = {
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}}
-`;
+        code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
     'if_else': createSafeStatementGenerator([0], (node, indent, context, [condition]) => {
@@ -509,8 +508,7 @@ const statementGenerators = {
         node.statements[1]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
         });
-        code += `${' '.repeat(indent)}}
-`;
+        code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
     'repeat_inf': (node, indent, context) => {
@@ -523,8 +521,7 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}
-`;
+        code += `${' '.repeat(indent)}}\n`;
         return code;
     },
     'repeat_basic': createSafeStatementGenerator([0], (node, indent, context, [count]) => {
@@ -540,8 +537,7 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}
-`;
+        code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
     'repeat_while_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) => {
@@ -554,8 +550,7 @@ const statementGenerators = {
         if (!bodyCode.includes('await')) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
-        code += `${' '.repeat(indent)}}
-`;
+        code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
     'stop_repeat': (node, indent, context) => {
@@ -642,12 +637,12 @@ const statementGenerators = {
     'sound_speed_set': createSafeStatementGenerator([0], (node, indent, context, [speed]) =>
         `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`
     ),
-    /*'get_sound_volume': (node, indent, context)=>{
+    'get_sound_volume': (node, indent, context)=>{
         return `${' '.repeat(indent)}Entry.getVolume();\n`;
-    },*/
-    /*'get_sound_speed':(node, indent, context)=>{
+    },
+    'get_sound_speed':(node, indent, context)=>{
         return `${' '.repeat(indent)}Entry.getSoundSpeed();\n`;
-    },*/
+    },
     'sound_silent_all': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopAllSounds();\n`;
     },
@@ -709,7 +704,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.textPrepend(${text});\n`
     ),
     'text_change_effect': createSafeStatementGenerator([0, 1], (node, indent, context, [effect, mod]) =>
-        `${' '.repeat(indent)}Entry.textChangeEffect(${effect},${mod});\n}`
+        `${' '.repeat(indent)}Entry.textChangeEffect(${effect},${mod});\n`
     ),
     'text_change_font': createSafeStatementGenerator([0], (node, indent, context, [font]) =>
         `${' '.repeat(indent)}Entry.textChangeFont(${font});\n`
@@ -810,7 +805,7 @@ function generateExpression(arg) {
             const string = generateExpression(arg.arguments[0]);
             const start = generateExpression(arg.arguments[1]);
             const end = generateExpression(arg.arguments[2]);
-            return `String(${string}).substring(${start},${end});`;
+            return `String(${string}).substring(${start}, ${end})`;
         }
         case 'count_match_string': {
             const string = generateExpression(arg.arguments[0]);
@@ -826,7 +821,7 @@ function generateExpression(arg) {
             const string = generateExpression(arg.arguments[0]);
             const pattern = generateExpression(arg.arguments[1]);
             const replacement = generateExpression(arg.arguments[2]);
-            return `String(${string}).replace(${pattern},${replacement})`;
+            return `String(${string}).replace(${pattern}, ${replacement})`;
         }
         case 'change_string_case': {
             const string = generateExpression(arg.arguments[0]);

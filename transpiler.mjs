@@ -129,9 +129,37 @@ const Transpiler = async (Jsonpath, onProgress) => {
         }
         ],
         */
+        if (Array.isArray(projectJson.functions)) {
+            const functionsToProcess = projectJson.functions.filter(func => func && func.content && func.content.length > 0);
+            if (functionsToProcess.length > 0 && onProgress) {
+                onProgress(`총 ${functionsToProcess.length}개의 함수를 병렬로 변환합니다.`);
+            }
+ 
+            const functionConvertPromises = functionsToProcess.map(func => {
+                const scriptFileName = `function_${func.id}.js`;
+                // C++ 엔진에서 사용할 상대 경로. 플랫폼 간 호환성을 위해 '/'를 사용합니다.
+                const relativeScriptPath = path.join('script', scriptFileName).replace(/\\/g, '/');
+ 
+                return transpileInWorker(func.content, onProgress, 5000)
+                    .then(generatedCode => {
+                        // 변환 성공 시, project.json의 함수 객체에 jscript 키와 경로를 추가합니다.
+                        func.jscript = relativeScriptPath;
+ 
+                        const absoluteScriptPath = path.join(scriptDir, scriptFileName);
+                        return fs.promises.writeFile(absoluteScriptPath, generatedCode);
+                    })
+                    .catch(error => {
+                        const errorMessage = `❌ 함수 (ID: ${func.id}) 처리 중 오류 발생: ${error.message}`;
+                        if (onProgress) onProgress(errorMessage);
+                        const errorStack = error.stack || error.toString();
+                        return fs.promises.writeFile(path.join(scriptDir, `function_${func.id}.error.log`), errorStack);
+                    });
+            });
+            promises.push(...functionConvertPromises);
+        }
         // 모든 변환 작업이 완료될 때까지 기다립니다.
         await Promise.all(promises);
-
+ 
         // 모든 작업 완료 후, 수정된 project.json을 다시 저장합니다.
         await fs.promises.writeFile(Jsonpath, JSON.stringify(projectJson, null, 4));
         if (onProgress) {
