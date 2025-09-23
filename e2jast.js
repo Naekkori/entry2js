@@ -364,9 +364,33 @@ function mapOperator(op) {
  * @returns {string} 생성된 JavaScript 코드 라인
  */
 
+/**
+ * statementGenerator를 안전하게 생성하는 고차 함수입니다.
+ * 이 함수는 생성기에 전달될 표현식(argument)들을 미리 평가합니다.
+ * 만약 표현식 중 하나라도 미구현되어 `null`을 반환하면,
+ * 해당 구문 전체를 주석 처리하고 경고 메시지를 반환합니다.
+ * 모든 표현식이 유효할 경우에만 실제 생성기 함수를 호출합니다.
+ *
+ * @param {number[]} argIndices - 평가할 node.arguments의 인덱스 배열
+ * @param {function(object, number, object, string[]): string} generator - (node, indent, context, expressions)를 인자로 받아 코드 문자열을 반환하는 함수
+ * @returns {function(object, number, object): string} - 최종 statementGenerator 함수
+ */
+function createSafeStatementGenerator(argIndices, generator) {
+    return (node, indent, context) => {
+        const expressions = argIndices.map(i => generateExpression(node.arguments[i], context));
+        if (expressions.some(expr => expr === null)) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
+        return generator(node, indent, context, expressions);
+    };
+}
+
 const statementGenerators = {
     'move_direction': (node, indent, context) => {
-        const distance = generateExpression(node.arguments[0]);
+        const distance = generateExpression(node.arguments[0], context);
+        if (distance === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.moveDirection(${distance});\n`;
     },
     'message_cast': (node, indent, context) => {
@@ -374,137 +398,98 @@ const statementGenerators = {
             return `${' '.repeat(indent)}// INFO: 'message_cast' statement with a null message ID was skipped.\n`;
         }
         const messageIdExpr = generateExpression(node.arguments[0]);
+        if (messageIdExpr === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.messageCast(${messageIdExpr});\n`;
     },
-    'move_x': (node, indent, context) => {
-        const x = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setX(Entry.getX() + ${x});\n`;
-    },
-    'move_y': (node, indent, context) => {
-        const y = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`;
-    },
-    'locate_x': (node, indent, context) => {
-        const x = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setX(${x});\n`;
-    },
-    'locate_y': (node, indent, context) => {
-        const y = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setY(${y});\n`;
-    },
-    'locate_xy': (node, indent, context) => {
-        const x = generateExpression(node.arguments[0]);
-        const y = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`;
-    },
-    'move_xy_time': (node, indent, context) => {
-        const x = generateExpression(node.arguments[0]);
-        const y = generateExpression(node.arguments[1]);
-        const time = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`;
-    },
-    'locate_xy_time': (node, indent, context) => {
-        const x = generateExpression(node.arguments[0]);
-        const y = generateExpression(node.arguments[1]);
-        const time = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`;
-    },
-    'rotate_relative': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`;
-    },
-    'direction_relative': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`;
-    },
-    'rotate_by_time': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        const time = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`;
-    },
-    'direction_relative_duration': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        const time = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`;
-    },
-    'direction_absolute': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setDirection(${angle});\n`;
-    },
-    'see_angle_object': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`;
-    },
-    'move_to_angle': (node, indent, context) => {
-        const angle = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.moveToangle(${angle});`;
-    },
-    'sound_something_with_block': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.playSound(${soundId});\n`;
-    },
-    'sound_something_second_with_block': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        const duration = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.playSoundForDuration(${soundId}, ${duration});\n`;
-    },
-    'sound_something_wait_with_block': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.waitforPlaysound(${soundId});\n`;
-    },
-    'sound_something_second_wait_with_block': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        const duration = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.waitforPlaysoundWithSeconds(${soundId}, ${duration});\n`;
-    },
-    'sound_from_to_and_wait': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        const from = generateExpression(node.arguments[1]);
-        const to = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.waitforPlaysoundFromto(${soundId}, ${from}, ${to});\n`;
-    },
-    'sound_from_to': (node, indent, context) => {
-        const soundId = generateExpression(node.arguments[0]);
-        const from = generateExpression(node.arguments[1]);
-        const to = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.playSoundFromto(${soundId}, ${from}, ${to});\n`;
-    },
-    'locate': (node, indent, context) => {
-        const targetObjectID = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`;
-    },
+    'move_x': createSafeStatementGenerator([0], (node, indent, context, [x]) =>
+        `${' '.repeat(indent)}Entry.setX(Entry.getX() + ${x});\n`
+    ),
+    'move_y': createSafeStatementGenerator([0], (node, indent, context, [y]) =>
+        `${' '.repeat(indent)}Entry.setY(Entry.getY() + ${y});\n`
+    ),
+    'locate_x': createSafeStatementGenerator([0], (node, indent, context, [x]) =>
+        `${' '.repeat(indent)}Entry.setX(${x});\n`
+    ),
+    'locate_y': createSafeStatementGenerator([0], (node, indent, context, [y]) =>
+        `${' '.repeat(indent)}Entry.setY(${y});\n`
+    ),
+    'locate_xy': createSafeStatementGenerator([0, 1], (node, indent, context, [x, y]) =>
+        `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
+    ),
+    'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
+        `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`
+    ),
+    'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
+        `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`
+    ),
+    'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
+    ),
+    'direction_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
+    ),
+    'rotate_by_time': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
+        `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`
+    ),
+    'direction_relative_duration': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
+        `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`
+    ),
+    'direction_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.setDirection(${angle});\n`
+    ),
+    'see_angle_object': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`
+    ),
+    'move_to_angle': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.moveToangle(${angle});`
+    ),
+    'sound_something_with_block': createSafeStatementGenerator([0], (node, indent, context, [soundId]) =>
+        `${' '.repeat(indent)}Entry.playSound(${soundId});\n`
+    ),
+    'sound_something_second_with_block': createSafeStatementGenerator([0, 1], (node, indent, context, [soundId, duration]) =>
+        `${' '.repeat(indent)}Entry.playSoundForDuration(${soundId}, ${duration});\n`
+    ),
+    'sound_something_wait_with_block': createSafeStatementGenerator([0], (node, indent, context, [soundId]) =>
+        `${' '.repeat(indent)}Entry.waitforPlaysound(${soundId});\n`
+    ),
+    'sound_something_second_wait_with_block': createSafeStatementGenerator([0, 1], (node, indent, context, [soundId, duration]) =>
+        `${' '.repeat(indent)}Entry.waitforPlaysoundWithSeconds(${soundId}, ${duration});\n`
+    ),
+    'sound_from_to_and_wait': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [soundId, from, to]) =>
+        `${' '.repeat(indent)}Entry.waitforPlaysoundFromto(${soundId}, ${from}, ${to});\n`
+    ),
+    'sound_from_to': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [soundId, from, to]) =>
+        `${' '.repeat(indent)}Entry.playSoundFromto(${soundId}, ${from}, ${to});\n`
+    ),
+    'locate': createSafeStatementGenerator([0], (node, indent, context, [targetObjectID]) =>
+        `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`
+    ),
     'bounce_wall': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.bounceWall();\n`;
     },
-    'dialog': (node, indent, context) => {
-        const message = generateExpression(node.arguments[0]);
-        const option = generateExpression(node.arguments[1]);
-        const time = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`;
-    },
+    'dialog': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message, option, time]) =>
+        `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
+    ),
     'remove_dialog': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.removeDialog();\n`;
     },
-    'change_shape': (node, indent, context) => {
-        const shapeId = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`;
-    },
-    'change_effect_amount': (node, indent, context) => {
-        const effect = generateExpression(node.arguments[0]);
-        const amount = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.changeEffectAmount(${effect}, ${amount});\n`;
-    },
+    'change_shape': createSafeStatementGenerator([0], (node, indent, context, [shapeId]) =>
+        `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`
+    ),
+    'change_effect_amount': createSafeStatementGenerator([0, 1], (node, indent, context, [effect, amount]) =>
+        `${' '.repeat(indent)}Entry.changeEffectAmount(${effect}, ${amount});\n`
+    ),
     'clear_effects': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.clearEffects();\n`;
     },
-    'change_size': (node, indent, context) => {
-        const size = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.changeSize(${size});\n`;
-    },
-    'set_size': (node, indent, context) => {
-        const set_size_amount = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setSize(${set_size_amount});\n`;
-    },
+    'change_size': createSafeStatementGenerator([0], (node, indent, context, [size]) =>
+        `${' '.repeat(indent)}Entry.changeSize(${size});\n`
+    ),
+    'set_size': createSafeStatementGenerator([0], (node, indent, context, [set_size_amount]) =>
+        `${' '.repeat(indent)}Entry.setSize(${set_size_amount});\n`
+    ),
     'flip_x': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.flipX();\n`;
     },
@@ -519,6 +504,9 @@ const statementGenerators = {
     },
     '_if': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
+        if (condition === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         let code = `${' '.repeat(indent)}if (${condition}) {\n`;
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
@@ -529,6 +517,9 @@ const statementGenerators = {
     },
     'if_else': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
+        if (condition === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         let code = `${' '.repeat(indent)}if (${condition}) {\n`;
         node.statements[0]?.forEach(stmt => {
             code += generateStatement(stmt, indent + 4, context);
@@ -560,6 +551,9 @@ const statementGenerators = {
         const loopVar = `fe_loop_${loopLevel}`; // 항상 고유한 이름 생성
         const newContext = { ...context, loopLevel: loopLevel + 1 };
         const count = generateExpression(node.arguments[0]);
+        if (count === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         let bodyCode = '';
         node.statements[0]?.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
@@ -575,6 +569,9 @@ const statementGenerators = {
     },
     'repeat_while_true': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
+        if (condition === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         let bodyCode = '';
         node.statements[0]?.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, context);
@@ -594,10 +591,16 @@ const statementGenerators = {
     'set_func_variable': (node, indent, context) => {
         const varName = toJsId(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
+        if (value === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     },
     'wait_until_true': (node, indent, context) => {
         const condition = generateExpression(node.arguments[0]);
+        if (condition === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}await Entry.waitUntilTrue(() => ${condition});\n`;
     },
     'function_general': (node, indent, context) => {
@@ -608,23 +611,38 @@ const statementGenerators = {
     'set_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
+        if (varid === null || value === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.variableContainer.setVariable(${varid}, ${value});\n`;
     },
     'change_variable': (node, indent, context) => {
         const varid = generateExpression(node.arguments[0]);
         const value = generateExpression(node.arguments[1]);
+        if (varid === null || value === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.variableContainer.changeVariable(${varid}, ${value});\n`;
     },
     'start_scene': (node, indent, context) => {
         const sceneId = generateExpression(node.arguments[0]);
+        if (sceneId === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.startScene(${sceneId});\n`;
     },
     'start_neighbor_scene': (node, indent, context) => {
         const sceneId = generateExpression(node.arguments[0]);
+        if (sceneId === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.startNeighborScene(${sceneId});\n`;
     },
     'create_clone': (node, indent, context) => {
         const targetObjectID = generateExpression(node.arguments[0]);
+        if (targetObjectID === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.createClone(${targetObjectID});\n`;
     },
     'delete_clone': (node, indent, context) => {
@@ -632,23 +650,38 @@ const statementGenerators = {
     },
     'stop_object': (node, indent, context) => {
         const targetOption = generateExpression(node.arguments[0]);
+        if (targetOption === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.stopObject(${targetOption});\n`;
     },
     'choose_project_timer_action': (node, indent, context) => {
         const action = generateExpression(node.arguments[0]);
+        if (action === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.setTimerAction(${action});\n`;
     },
     'set_visible_project_timer': (node, indent, context) => {
         const visible = generateExpression(node.arguments[0]);
+        if (visible === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`;
     },
     'locate_object_time': (node, indent, context) => {
         const id = generateExpression(node.arguments[0]);
         const time = generateExpression(node.arguments[1]);
+        if (id === null || time === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.locateObjectTime(${id}, ${time});\n`;
     },
     'rotate_absolute': (node, indent, context) => {
         const angle = generateExpression(node.arguments[0]);
+        if (angle === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.setAngle(${angle});\n`;
     },
     'change_to_next_shape': (node, indent, context) => {
@@ -656,24 +689,39 @@ const statementGenerators = {
     },
     'change_to_some_shape': (node, indent, context) => {
         const shapeId = generateExpression(node.arguments[0]);
+        if (shapeId === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeShape(${shapeId});\n`;
     },
     'add_effect_amount': (node, indent, context) => {
         const effect = generateExpression(node.arguments[0]);
         const amount = generateExpression(node.arguments[1]);
+        if (effect === null || amount === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.addEffectAmount(${effect}, ${amount});\n`;
     },
     'change_scale_size': (node, indent, context) => {
         const size = generateExpression(node.arguments[0]);
+        if (size === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeSize(${size});\n`;
     },
     'set_scale_size': (node, indent, context) => {
         const size = generateExpression(node.arguments[0]);
+        if (size === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.setSize(${size});\n`;
     },
     'stretch_scale_size': (node, indent, context) => {
         const dimension = generateExpression(node.arguments[0]);
         const size = generateExpression(node.arguments[1]);
+        if (dimension === null || size === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.strechScaleSize(${dimension}, ${size});\n`;
     },
     'reset_scale_size': (node, indent, context) => {
@@ -681,22 +729,37 @@ const statementGenerators = {
     },
     'change_object_index': (node, indent, context) => {
         const index = generateExpression(node.arguments[0]);
+        if (index === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeObjectIndex(${index});\n`;
     },
     'sound_volume_change': (node, indent, context) => {
         const volume = generateExpression(node.arguments[0]);
+        if (volume === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeVolume(${volume});\n`;
     },
     'sound_volume_set': (node, indent, context) => {
         const volume = generateExpression(node.arguments[0]);
+        if (volume === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeVolume(${volume});\n`;
     },
     'sound_speed_change': (node, indent, context) => {
         const speed = generateExpression(node.arguments[0]);
+        if (speed === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`;
     },
     'sound_speed_set': (node, indent, context) => {
         const speed = generateExpression(node.arguments[0]);
+        if (speed === null) {
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        }
         return `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`;
     },
     /*'get_sound_volume': (node, indent, context)=>{
@@ -708,63 +771,45 @@ const statementGenerators = {
     'sound_silent_all': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopAllSounds();\n`;
     },
-    'play_bgm': (node, indent, context) => {
-        const soundID = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.playBgm(${soundID});\n`;
-    },
+    'play_bgm': createSafeStatementGenerator([0], (node, indent, context, [soundID]) =>
+        `${' '.repeat(indent)}Entry.playBgm(${soundID});\n`
+    ),
     'stop_bgm': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopBgm();\n`;
     },
-    'ask_and_wait': (node, indent, context) => {
-        const question = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}await Entry.askAndWait(${question});\n`;
-    },
-    'set_visible_answer': (node, indent, context) => {
-        const visible = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.setVisibleAnswer(${visible});\n`;
-    },
-    'show_variable':(node,indent,context)=>{
-        const variableID = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.showVariable(${variableID});\n`;
-    },
-    'hide_variable':(node,indent,context)=>{
-        const variableID = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.hideVariable(${variableID});\n`;
-    },
-    'add_value_to_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        const value = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.variableContainer.addValueToList(${list},${value});\n`;
-    },
-    'remove_value_from_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        const index = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.variableContainer.removeValueFromList(${list},${index});\n`;
-    },
-    'insert_value_to_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        const index = generateExpression(node.arguments[1]);
-        const value = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.variableContainer.insertValueToList(${list},${index},${value});\n`;
-    },
-    'change_value_list_index':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        const index = generateExpression(node.arguments[1]);
-        const value = generateExpression(node.arguments[2]);
-        return `${' '.repeat(indent)}Entry.variableContainer.changeValueListIndex(${list},${index},${value});\n`;
-    },
-    'show_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.showList(${list});\n`;
-    },
-    'hide_list':(node,indent,context)=>{
-        const list = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.hideList(${list});\n`;
-    },
-    'wait_second':(node,indent,context)=>{
-        const second = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}await Entry.waitSeconds(${second});\n`;
-    },
+    'ask_and_wait': createSafeStatementGenerator([0], (node, indent, context, [question]) =>
+        `${' '.repeat(indent)}await Entry.askAndWait(${question});\n`
+    ),
+    'set_visible_answer': createSafeStatementGenerator([0], (node, indent, context, [visible]) =>
+        `${' '.repeat(indent)}Entry.setVisibleAnswer(${visible});\n`
+    ),
+    'show_variable': createSafeStatementGenerator([0], (node, indent, context, [variableID]) =>
+        `${' '.repeat(indent)}Entry.showVariable(${variableID});\n`
+    ),
+    'hide_variable': createSafeStatementGenerator([0], (node, indent, context, [variableID]) =>
+        `${' '.repeat(indent)}Entry.hideVariable(${variableID});\n`
+    ),
+    'add_value_to_list': createSafeStatementGenerator([0, 1], (node, indent, context, [list, value]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.addValueToList(${list},${value});\n`
+    ),
+    'remove_value_from_list': createSafeStatementGenerator([0, 1], (node, indent, context, [list, index]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.removeValueFromList(${list},${index});\n`
+    ),
+    'insert_value_to_list': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [list, index, value]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.insertValueToList(${list},${index},${value});\n`
+    ),
+    'change_value_list_index': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [list, index, value]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.changeValueListIndex(${list},${index},${value});\n`
+    ),
+    'show_list': createSafeStatementGenerator([0], (node, indent, context, [list]) =>
+        `${' '.repeat(indent)}Entry.showList(${list});\n`
+    ),
+    'hide_list': createSafeStatementGenerator([0], (node, indent, context, [list]) =>
+        `${' '.repeat(indent)}Entry.hideList(${list});\n`
+    ),
+    'wait_second': createSafeStatementGenerator([0], (node, indent, context, [second]) =>
+        `${' '.repeat(indent)}await Entry.waitSeconds(${second});\n`
+    ),
     'continue_repeat':(node,indent,context)=>{
         return `${' '.repeat(indent)}continue;\n`;
     },
@@ -774,35 +819,27 @@ const statementGenerators = {
     'remove_all_clones':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.removeAllClones();\n`;
     },
-    'text_write':(node,indent,context)=>{
-        const text = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textWrite(${text});\n`;
-    },
-    'text_append':(node,indent,context)=>{
-        const text = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textAppend(${text});\n`;
-    },
-    'text_prepend':(node,indent,context)=>{
-        const text = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textPrepend(${text});\n`;
-    },
-    'text_change_effect':(node,indent,context)=>{
-        const effect = generateExpression(node.arguments[0]);
-        const mod = generateExpression(node.arguments[1]);
-        return `${' '.repeat(indent)}Entry.textChangeEffect(${effect},${mod});\n}`;
-    },
-    'text_change_font':(node,indent,context)=>{
-        const font = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textChangeFont(${font});\n`;
-    },
-    'text_change_font_color':(node,indent,context)=>{
-        const color = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textChangeFontColor(${color});\n`;
-    },
-    'text_change_bg_color':(node,indent,context)=>{
-        const color = generateExpression(node.arguments[0]);
-        return `${' '.repeat(indent)}Entry.textChangeFontBGColor(${color});\n`;
-    },
+    'text_write': createSafeStatementGenerator([0], (node, indent, context, [text]) =>
+        `${' '.repeat(indent)}Entry.textWrite(${text});\n`
+    ),
+    'text_append': createSafeStatementGenerator([0], (node, indent, context, [text]) =>
+        `${' '.repeat(indent)}Entry.textAppend(${text});\n`
+    ),
+    'text_prepend': createSafeStatementGenerator([0], (node, indent, context, [text]) =>
+        `${' '.repeat(indent)}Entry.textPrepend(${text});\n`
+    ),
+    'text_change_effect': createSafeStatementGenerator([0, 1], (node, indent, context, [effect, mod]) =>
+        `${' '.repeat(indent)}Entry.textChangeEffect(${effect},${mod});\n}`
+    ),
+    'text_change_font': createSafeStatementGenerator([0], (node, indent, context, [font]) =>
+        `${' '.repeat(indent)}Entry.textChangeFont(${font});\n`
+    ),
+    'text_change_font_color': createSafeStatementGenerator([0], (node, indent, context, [color]) =>
+        `${' '.repeat(indent)}Entry.textChangeFontColor(${color});\n`
+    ),
+    'text_change_bg_color': createSafeStatementGenerator([0], (node, indent, context, [color]) =>
+        `${' '.repeat(indent)}Entry.textChangeFontBGColor(${color});\n`
+    ),
     'text_flush':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.textFlush();\n`;
     },
@@ -1104,7 +1141,11 @@ function generateExpression(arg) {
             return getParamName(arg);
         }
 
-        default: return `/* TODO: Expression for '${arg.type}' */`;
+        default:
+            // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
+            // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
+            console.warn(`Unimplemented expression block type: ${arg.type}`);
+            return null;
     }
 }
 function test_ast(entryScript) {
