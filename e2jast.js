@@ -616,7 +616,7 @@ const statementGenerators = {
     'set_scale_size': createSafeStatementGenerator([0], (node, indent, context, [size]) =>
         `${' '.repeat(indent)}Entry.setSize(${size});\n`
     ),
-    'stretch_scale_size': createSafeStatementGenerator([0, 1], (node, indent, context, [dimension, size]) =>
+    'stretch_scale_size': createSafeStatementGenerator([0, 1], (node, indent, context, [dimension,size]) =>
         `${' '.repeat(indent)}Entry.strechScaleSize(${dimension}, ${size});\n`
     ),
     'reset_scale_size': (node, indent, context) => {
@@ -664,11 +664,11 @@ const statementGenerators = {
     'hide_variable': createSafeStatementGenerator([0], (node, indent, context, [variableID]) =>
         `${' '.repeat(indent)}Entry.hideVariable(${variableID});\n`
     ),
-    'add_value_to_list': createSafeStatementGenerator([0, 1], (node, indent, context, [list, value]) =>
-        `${' '.repeat(indent)}Entry.variableContainer.addValueToList(${list},${value});\n`
+    'add_value_to_list': createSafeStatementGenerator([0, 1], (node, indent, context, [value, listID]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.addValueToList(${listID}, ${value});\n`
     ),
-    'remove_value_from_list': createSafeStatementGenerator([0, 1], (node, indent, context, [list, index]) =>
-        `${' '.repeat(indent)}Entry.variableContainer.removeValueFromList(${list},${index});\n`
+    'remove_value_from_list': createSafeStatementGenerator([0, 1], (node, indent, context, [index, listID]) =>
+        `${' '.repeat(indent)}Entry.variableContainer.removeValueFromList(${listID},${index});\n`
     ),
     'insert_value_to_list': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [list, index, value]) =>
         `${' '.repeat(indent)}Entry.variableContainer.insertValueToList(${list},${index},${value});\n`
