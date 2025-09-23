@@ -108,7 +108,7 @@ const Transpiler = async (Jsonpath, onProgress) => {
                     return fs.promises.writeFile(path.join(scriptDir, `object_${obj.id}.error.log`), errorStack);
                 });
         });
-        //TODO:여기에 project.json 의 루트 오브젝트의 functions 배열을 처리하는 걸 추가해야함 (사용자 정의 함수.)
+        //TODO:여기에 project.json 의 루트 오브젝트 functions 배열을 처리하는 걸 추가해야함 (사용자 정의 함수.)
         //TODO:e2jast 에 해당 작업이 구현되어있는거 같음
         /*
         구조 예시
