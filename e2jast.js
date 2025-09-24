@@ -461,6 +461,9 @@ const statementGenerators = {
     'dialog': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message, option, time]) =>
         `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
     ),
+    'dialog_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message, option, time]) =>
+        `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
+    ),
     'remove_dialog': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.removeDialog();\n`;
     },
