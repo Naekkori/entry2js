@@ -278,9 +278,6 @@ const eventHandlerConfig = {
     "mouse_click_cancel": { event: 'mouse_up' },
     "object_click": {
         event: 'object_click',
-        param: 'objectId',
-        condition: 'objectId === Entry.getId()',
-        indent: 2
     },
     "object_click_canceled": { event: 'object_click_canceled' },
     "message_cast": {
