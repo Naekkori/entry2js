@@ -557,7 +557,10 @@ const statementGenerators = {
         code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
-    'repeat_while_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) => {
+    'repeat_while_true': createSafeStatementGenerator([0], (node, indent, context, [conditionExpr]) => {
+        const option = node.arguments[1]; // 'until' or 'while'
+        const finalCondition = option === 'until' ? `!(${conditionExpr})` : conditionExpr;
+
         const statements = node.statements[0] || [];
         const hasUnconditionalAwait = statements.some(stmt =>
             ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
@@ -568,7 +571,7 @@ const statementGenerators = {
             bodyCode += generateStatement(stmt, indent + 4, context);
         });
 
-        let code = `${' '.repeat(indent)}while (${condition}) {\n`;
+        let code = `${' '.repeat(indent)}while (${finalCondition}) {\n`;
         code += bodyCode;
 
         if (!hasUnconditionalAwait) {
