@@ -973,8 +973,7 @@ function generateExpression(arg) {
         }
         // 글상자
         case 'text_read':{
-            const text = generateExpression(arg.arguments[0]);
-            return `Entry.textRead(${text})`;
+            return `Entry.textRead()`;
         }
         // 대답 가져오기
         case 'get_canvas_input_value': {
@@ -1015,8 +1014,8 @@ function generateExpression(arg) {
             return `Entry.getTimerValue()`;
         }
         case 'get_date': {
-            // generateExpression 대신, 인자에서 텍스트 값을 직접 추출합니다.
-            const selectAction = arg.arguments[0]?.arguments[0];
+            const param = arg.arguments[0];
+            const selectAction = (param && typeof param === 'object' && param.arguments) ? param.arguments[0] : param;
             switch (selectAction) {
                 case 'YEAR': return `new Date().getFullYear()`;
                 case 'MONTH': return `new Date().getMonth() + 1`;
