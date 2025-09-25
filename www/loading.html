@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Entry2JS</title>
+    <link rel="stylesheet" href="loading.css">
+</head>
+<body>
+    <div class="loader"></div>
+    <div class="loading-text">잠시만 기다려 주십시오</div>
+    <script>
+        window.electronAPI.onUpdateMessage((message) => {
+            const loadingText = document.querySelector('.loading-text');
+            if (loadingText) {
+                loadingText.textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>
