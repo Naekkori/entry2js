@@ -455,8 +455,8 @@ const statementGenerators = {
     'bounce_wall': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.bounceWall();\n`;
     },
-    'dialog': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message, time, option]) =>
-        `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
+    'dialog': createSafeStatementGenerator([0, 1], (node, indent, context, [message, option]) =>
+        `${' '.repeat(indent)}Entry.dialog(${message}, ${option});\n`
     ),
     'dialog_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message,time, option]) =>
         `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
