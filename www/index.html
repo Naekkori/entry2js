@@ -12,21 +12,25 @@
             font-weight: 400;
             src: url('fonts/nanum/NanumBarunGothic.ttf') format('truetype');
         }
+
         @font-face {
             font-family: 'NanumBarunGothic';
             font-weight: 600;
             src: url('fonts/nanum/NanumBarunGothicBold.ttf') format('truetype');
         }
+
         @font-face {
             font-family: 'NanumBarunGothic';
             font-weight: 200;
             src: url('fonts/nanum/NanumBarunGothicLight.ttf') format('truetype');
         }
+
         @font-face {
             font-family: 'NanumBarunGothic';
             font-weight: 100;
             src: url('fonts/nanum/NanumBarunGothicUltraLight.ttf') format('truetype');
         }
+
         :root {
             --primaryH: 206;
             --primaryS: 100%;
@@ -91,7 +95,8 @@
                         <th>값</th>
                     </tr>
                     <tr>
-                        <td>바이트코드 컴파일<p class="hint">javascript 를 바이트코드 로 컴파일 합니다,<br>성능이 향상 될수 있습니다.</p></td>
+                        <td>바이트코드 컴파일<p class="hint">javascript 를 바이트코드 로 컴파일 합니다,<br>성능이 향상 될수 있습니다.</p>
+                        </td>
                         <td><input type="checkbox" name="option" id="bytecode_compile" onchange="EnableCompile(this)">
                         </td>
                     </tr>
@@ -101,7 +106,8 @@
                             <div class="input-group">
                                 <input type="text" placeholder="여기에 FastEntry.exe의 경로 입력" id="bytecode_compile_path"
                                     onchange="SetCompilePath(this)" disabled>
-                                <button type="button" id="bytecode_compile_btn" aria-label="컴파일러 경로 열기" disabled>열기</button>
+                                <button type="button" id="bytecode_compile_btn" aria-label="컴파일러 경로 열기"
+                                    disabled>열기</button>
                             </div>
                         </td>
                     </tr>
@@ -129,6 +135,11 @@
         style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
         <h1>앱페이지</h1>
     </div>
+    <footer>
+        <span>©2025 내꼬리</span>
+        <a href="https://github.com/Naekkori/entry2js" style="text-decoration: none;">프로젝트 페이지</a>
+        <a href="http://">FastEntry 다운로드 </a>
+    </footer>
     <script src="index.js"></script>
 </body>
 

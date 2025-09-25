@@ -131,3 +131,9 @@ h1 {
     margin-left: 8px; /* 입력창과 버튼 사이의 간격 */
     flex-shrink: 0; /* 버튼 크기가 줄어들지 않도록 설정 */
 }
+
+footer :not(:last-child)::after {
+    content: "|"; /* 구분자로 사용할 문자 */
+    padding: 0 10px;
+    color: #ccc;
+}
