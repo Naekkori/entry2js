@@ -154,5 +154,5 @@ footer :not(:last-child)::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 93h;
+  height: 93vh;
 }
