@@ -1,5 +1,3 @@
-console.log(`[RENDERER] index.js loaded at ${Date.now()}`);
-
 /*
 *  동적 앱 페이지
 *
@@ -77,16 +75,10 @@ async function OpenCompilerPath() {
         alert(`컴파일러 경로를 여는 중 오류가 발생했습니다: ${err.message || err}`);
     }
 }
-
-console.log(`[RENDERER] onload setting up at ${Date.now()}`);
-
 window.onload = async function () {
-    console.log(`[RENDERER] onload event fired at ${Date.now()}`);
     // 페이지 렌더링
     appContainer.innerHTML = home;
-    console.log(`[RENDERER] home page rendered at ${Date.now()}`);
     await getInfo();
-    console.log(`[RENDERER] getInfo finished at ${Date.now()}`);
     // 로컬스토리지 준비
     const byteCodePath = localStorage.getItem("BytecodePath");
     const byteCodeCompileStr = localStorage.getItem("ByteCodeCompile");
@@ -104,21 +96,12 @@ window.onload = async function () {
     } else {
         localStorage.setItem("ByteCodeCompile", false);
     }
-    console.log(`[RENDERER] onload finished at ${Date.now()}`);
 };
-
-console.log(`[RENDERER] onload set up at ${Date.now()}`);
-
 async function getInfo() {
-    console.log(`[RENDERER] getInfo called at ${Date.now()}`);
     const returnInfo = await window.electronAPI.getProgramInfo();
     const Info = document.getElementById("info");
     Info.innerHTML = `이름: ${returnInfo.name}<br>버전: ${returnInfo.version}<br>설명: ${returnInfo.description}<br>작성자: ${returnInfo.author}<br>라이선스: ${returnInfo.license}`;
-    console.log(`[RENDERER] getInfo innerHTML updated at ${Date.now()}`);
 }
-
-console.log(`[RENDERER] event listener setting up at ${Date.now()}`);
-
 // 이벤트 위임을 사용하여 동적으로 생성되는 버튼도 처리
 document.body.addEventListener("click", async (event) => {
     const targetId = event.target.id || event.target.closest('button')?.id;
@@ -152,5 +135,3 @@ document.body.addEventListener("click", async (event) => {
         OpenCompilerPath();
     }
 });
-
-console.log(`[RENDERER] event listener set up at ${Date.now()}`);
