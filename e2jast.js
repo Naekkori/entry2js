@@ -404,10 +404,10 @@ const statementGenerators = {
     'locate_xy': createSafeStatementGenerator([0, 1], (node, indent, context, [x, y]) =>
         `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
     ),
-    'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
+    'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
         `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
     ),
-    'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
+    'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
         `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
     ),
     'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
@@ -624,7 +624,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.setVisibleTimer(${visible});\n`
     ),
     'locate_object_time': createSafeStatementGenerator([0, 1], (node, indent, context, [id, time]) =>
-        `${' '.repeat(indent)}Entry.locateObjectTime(${id}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.locateObjectTime(${id}, ${time});\n`
     ),
     'rotate_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.setAngle(${angle});\n`
