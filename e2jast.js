@@ -405,10 +405,10 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
     ),
     'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
-        `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.moveXYtime(${x}, ${y}, ${time});\n`
     ),
     'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
-        `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.moveXYtime(${x}, ${y}, ${time});\n`
     ),
     'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
