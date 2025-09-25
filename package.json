@@ -15,6 +15,7 @@
     "build:win64": "electron-builder --win portable --x64"
   },
   "build": {
+    "asar": false,
     "appId": "com.kkori.entry2js",
     "productName": "Entry2JS",
     "directories": {

@@ -1,5 +1,7 @@
+console.log(`[PRELOAD] preload.js loaded at ${Date.now()}`);
 const { contextBridge, ipcRenderer } = require('electron');
 
+console.log(`[PRELOAD] contextBridge.exposeInMainWorld called at ${Date.now()}`);
 contextBridge.exposeInMainWorld('electronAPI', {
     openCompilerPath: () => ipcRenderer.invoke('dialog:openCompilerPath'),
     openFile: () => ipcRenderer.invoke('dialog:openFile'),
@@ -9,3 +11,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     startConvert: (FilePath) => ipcRenderer.invoke('conv:Start', FilePath),
     onProcessLog: (callback) => ipcRenderer.on('proc:log', (_event, value) => callback(value))
 });
+console.log(`[PRELOAD] contextBridge.exposeInMainWorld finished at ${Date.now()}`);

@@ -1,13 +1,17 @@
+console.log(`[MAIN] app.js loaded at ${Date.now()}`);
 import { app, ipcMain, dialog, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractPlayEntryProject } from "./extract.mjs";
-import ExcutionCompile from "./compile_excution.mjs";
-import Transpiler from "./transpiler.mjs";
 import { readFileSync } from 'node:fs';
+
+console.log(`[MAIN] Imports loaded at ${Date.now()}`);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 var isCompile=false;
+
+console.log(`[MAIN] IPC handlers setting up at ${Date.now()}`);
+
 ipcMain.handle('dialog:openFile', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
         title: '엔트리프로젝트 파일 을 선택하세요.',
@@ -67,10 +71,12 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
 
     try {
         onProgress('변환 프로세스를 시작합니다...');
+        const { extractPlayEntryProject } = await import("./extract.mjs");
         // extract 함수에 onProgress 콜백을 전달합니다.
         await extractPlayEntryProject(filePath, outputDir, onProgress);
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
+        const { default: Transpiler } = await import("./transpiler.mjs");
         // 실제 변환프로세스
         await Transpiler(path.join(outputDir, 'project.json'), onProgress)
         if (isCompile) {
@@ -85,7 +91,11 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
         return { success: false, message: `변환 실패: ${error.message}` };
     }
 });
+
+console.log(`[MAIN] IPC handlers set up at ${Date.now()}`);
+
 const createWindow = () => {
+    console.log(`[MAIN] createWindow called at ${Date.now()}`);
     // 새로운 브라우저 창을 생성합니다.
     const win = new BrowserWindow({
         width: 950,
@@ -98,8 +108,11 @@ const createWindow = () => {
         icon: path.join(__dirname, 'assets/icons/png/icon.png')
     });
 
+    console.log(`[MAIN] BrowserWindow created at ${Date.now()}`);
+
     // index.html 파일을 창으로 불러옵니다.
     win.loadFile('www/index.html');
+    console.log(`[MAIN] loadFile called at ${Date.now()}`);
     win.setMenu(null);
     // (선택사항) 개발자 도구를 엽니다.
     win.webContents.on('before-input-event', (event, input) => {
@@ -108,14 +121,19 @@ const createWindow = () => {
             event.preventDefault();
         }
     })
+    console.log(`[MAIN] createWindow finished at ${Date.now()}`);
 };
+
+console.log(`[MAIN] App listeners setting up at ${Date.now()}`);
 
 // Electron이 준비되면(초기화 완료) 브라우저 창을 생성합니다.
 app.whenReady().then(() => {
+    console.log(`[MAIN] app.whenReady resolved at ${Date.now()}`);
     createWindow();
 
     // macOS에서 독 아이콘을 클릭했을 때 새 창을 여는 로직
     app.on('activate', () => {
+        console.log(`[MAIN] app activate event at ${Date.now()}`);
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
         }
@@ -124,6 +142,9 @@ app.whenReady().then(() => {
 
 // 모든 창이 닫혔을 때 앱을 종료합니다. (Windows & Linux)
 app.on('window-all-closed', () => {
+    console.log(`[MAIN] window-all-closed event at ${Date.now()}`);
     // 모든 플랫폼에서 창이 닫히면 앱을 종료합니다.
     app.quit();
 });
+
+console.log(`[MAIN] App listeners set up at ${Date.now()}`);
