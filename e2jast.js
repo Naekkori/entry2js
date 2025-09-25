@@ -512,15 +512,23 @@ const statementGenerators = {
         return code;
     }),
     'repeat_inf': (node, indent, context) => {
+        const statements = node.statements[0] || [];
+        const hasUnconditionalAwait = statements.some(stmt =>
+            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
+        );
+
         let bodyCode = '';
-        node.statements[0]?.forEach(stmt => {
+        statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, context);
         });
+
         let code = `${' '.repeat(indent)}while(true) {\n`;
         code += bodyCode;
-        if (!bodyCode.includes('await')) {
+
+        if (!hasUnconditionalAwait) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
+
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
@@ -528,28 +536,45 @@ const statementGenerators = {
         const loopLevel = context.loopLevel || 0;
         const loopVar = `fe_loop_${loopLevel}`; // 항상 고유한 이름 생성
         const newContext = { ...context, loopLevel: loopLevel + 1 };
+
+        const statements = node.statements[0] || [];
+        const hasUnconditionalAwait = statements.some(stmt =>
+            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
+        );
+
         let bodyCode = '';
-        node.statements[0]?.forEach(stmt => {
+        statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
+
         let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
-        if (!bodyCode.includes('await')) {
+
+        if (!hasUnconditionalAwait) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
+
         code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
     'repeat_while_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) => {
+        const statements = node.statements[0] || [];
+        const hasUnconditionalAwait = statements.some(stmt =>
+            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
+        );
+
         let bodyCode = '';
-        node.statements[0]?.forEach(stmt => {
+        statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, context);
         });
+
         let code = `${' '.repeat(indent)}while (${condition}) {\n`;
         code += bodyCode;
-        if (!bodyCode.includes('await')) {
+
+        if (!hasUnconditionalAwait) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
+
         code += `${' '.repeat(indent)}}\n`;
         return code;
     }),
