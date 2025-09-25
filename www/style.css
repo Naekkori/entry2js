@@ -24,8 +24,10 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 44em;
     height: 28em;
-    display: flex; /* Flexbox 레이아웃 적용 */
-    flex-direction: column; /* 자식 요소들을 세로로 배치 */
+    display: flex;
+    /* Flexbox 레이아웃 적용 */
+    flex-direction: column;
+    /* 자식 요소들을 세로로 배치 */
 }
 
 .settings_window header {
@@ -39,15 +41,19 @@
 }
 
 .settings_content {
-    flex-grow: 1; /* header를 제외한 나머지 모든 수직 공간을 차지하도록 설정 */
-    min-height: 0; /* flex-grow와 함께 사용할 때 넘침(overflow) 문제를 방지 */
+    flex-grow: 1;
+    /* header를 제외한 나머지 모든 수직 공간을 차지하도록 설정 */
+    min-height: 0;
+    /* flex-grow와 함께 사용할 때 넘침(overflow) 문제를 방지 */
     overflow-y: auto;
     /* 내용이 넘칠 경우에만 세로 스크롤바 표시 */
     padding-right: 0.5rem;
 }
-.hint{
+
+.hint {
     color: gray;
 }
+
 .close_btn {
     position: absolute;
     top: 50%;
@@ -123,17 +129,30 @@ h1 {
 }
 
 .input-group input[type="text"] {
-    flex-grow: 1; /* 사용 가능한 공간을 모두 차지하도록 설정 */
-    min-width: 0; /* flex 아이템이 내용보다 작아질 수 있도록 허용 */
+    flex-grow: 1;
+    /* 사용 가능한 공간을 모두 차지하도록 설정 */
+    min-width: 0;
+    /* flex 아이템이 내용보다 작아질 수 있도록 허용 */
 }
 
 .input-group button {
-    margin-left: 8px; /* 입력창과 버튼 사이의 간격 */
-    flex-shrink: 0; /* 버튼 크기가 줄어들지 않도록 설정 */
+    margin-left: 8px;
+    /* 입력창과 버튼 사이의 간격 */
+    flex-shrink: 0;
+    /* 버튼 크기가 줄어들지 않도록 설정 */
 }
 
 footer :not(:last-child)::after {
-    content: "|"; /* 구분자로 사용할 문자 */
+    content: "|";
+    /* 구분자로 사용할 문자 */
     padding: 0 10px;
     color: #ccc;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 93h;
 }
