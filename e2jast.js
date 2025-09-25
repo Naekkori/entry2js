@@ -405,10 +405,10 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
     ),
     'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
-        `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
     ),
     'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [x, y, time]) =>
-        `${' '.repeat(indent)}Entry.moveXYTime(${x}, ${y}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.moveXYTime(${x}, ${y}, ${time});\n`
     ),
     'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
@@ -417,10 +417,10 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
     ),
     'rotate_by_time': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
-        `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.rotateByTime(${angle}, ${time});\n`
     ),
     'direction_relative_duration': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
-        `${' '.repeat(indent)}Entry.rotateByTime(${angle}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.rotateByTime(${angle}, ${time});\n`
     ),
     'direction_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.setDirection(${angle});\n`
@@ -438,13 +438,13 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.playSoundForDuration(${soundId}, ${duration});\n`
     ),
     'sound_something_wait_with_block': createSafeStatementGenerator([0], (node, indent, context, [soundId]) =>
-        `${' '.repeat(indent)}Entry.waitforPlaysound(${soundId});\n`
+        `${' '.repeat(indent)}await Entry.waitforPlaysound(${soundId});\n`
     ),
     'sound_something_second_wait_with_block': createSafeStatementGenerator([0, 1], (node, indent, context, [soundId, duration]) =>
-        `${' '.repeat(indent)}Entry.waitforPlaysoundWithSeconds(${soundId}, ${duration});\n`
+        `${' '.repeat(indent)}await Entry.waitforPlaysoundWithSeconds(${soundId}, ${duration});\n`
     ),
     'sound_from_to_and_wait': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [soundId, from, to]) =>
-        `${' '.repeat(indent)}Entry.waitforPlaysoundFromto(${soundId}, ${from}, ${to});\n`
+        `${' '.repeat(indent)}await Entry.waitforPlaysoundFromto(${soundId}, ${from}, ${to});\n`
     ),
     'sound_from_to': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [soundId, from, to]) =>
         `${' '.repeat(indent)}Entry.playSoundFromto(${soundId}, ${from}, ${to});\n`
