@@ -1,14 +1,14 @@
-name: Build/release
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # v로 시작하는 태그가 푸시될 때 실행
+      - 'v*'
 
 jobs:
-  release:
+  build:
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
@@ -25,9 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build and release Electron app
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build application
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
             npm run build:win
@@ -37,3 +35,29 @@ jobs:
             npm run build:linux
           fi
         shell: bash
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-build
+          path: dist
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
