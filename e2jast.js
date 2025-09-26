@@ -838,20 +838,11 @@ function generateExpression(arg) {
             const index = generateExpression(arg.arguments[1]);
             return `Entry.charAt(${string},${index})`;
         }
-        case 'change_string_case': {
-            const string = generateExpression(arg.arguments[0]);
-            const caseType = generateExpression(arg.arguments[1]);
-            if (caseType === `toUpperCase`) {
-                return `String(${string}).toUpperCase()`;
-            }else if (caseType === `toLowerCase`) {
-                return `String(${string}).toLowerCase()`;
-            }
-        }
         case 'substring': {
             const string = generateExpression(arg.arguments[0]);
             const start = generateExpression(arg.arguments[1]);
             const end = generateExpression(arg.arguments[2]);
-            return `String(${string}).substring(${start}, ${end})`;
+            return `String(${string}).substring(${start} - 1, ${end})`;
         }
         case 'count_match_string': {
             const string = generateExpression(arg.arguments[0]);
@@ -872,13 +863,13 @@ function generateExpression(arg) {
         case 'change_string_case': {
             const string = generateExpression(arg.arguments[0]);
             const caseType = generateExpression(arg.arguments[1]);
-            switch (caseType) {
-                case 'upper':
+            // caseType is a string literal like '"toUpperCase"' or '"toLowerCase"'
+            if (caseType === 'toUpperCase') {
                     return `String(${string}).toUpperCase()`;
-                case 'lower':
+            } else if (caseType === 'toLowerCase') {
                     return `String(${string}).toLowerCase()`;
-                default:
-                    return `String(${string})`;
+            } else {
+                return `String(${string})`; // Fallback
             }
         }
         case 'get_sound_volume':
