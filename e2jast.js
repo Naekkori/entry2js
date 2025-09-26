@@ -838,6 +838,15 @@ function generateExpression(arg) {
             const index = generateExpression(arg.arguments[1]);
             return `Entry.charAt(${string},${index})`;
         }
+        case 'change_string_case': {
+            const string = generateExpression(arg.arguments[0]);
+            const caseType = generateExpression(arg.arguments[1]);
+            if (caseType === `toUpperCase`) {
+                return `String(${string}).toUpperCase()`;
+            }else if (caseType === `toLowerCase`) {
+                return `String(${string}).toLowerCase()`;
+            }
+        }
         case 'substring': {
             const string = generateExpression(arg.arguments[0]);
             const start = generateExpression(arg.arguments[1]);
