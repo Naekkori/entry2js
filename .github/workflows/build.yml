@@ -8,10 +8,10 @@ on:
 jobs:
   build:
     name: Build on ${{ matrix.os }}
-    runs-on: [self-hosted, ${{ matrix.os }}] # 셀프 호스트 러너를 사용하도록 변경
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows, macos, linux] # 러너 라벨에 맞게 OS 이름 변경
+        os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
@@ -39,13 +39,13 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-build
+          name: ${{ runner.os }}-build
           path: dist
 
   release:
     name: Create Release
     needs: build
-    runs-on: ubuntu-latest # 릴리즈 잡은 GitHub 호스팅 러너 사용
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
