@@ -863,7 +863,6 @@ function generateExpression(arg) {
         case 'change_string_case': {
             const string = generateExpression(arg.arguments[0]);
             const caseType = generateExpression(arg.arguments[1]);
-            // caseType is a string literal like '"toUpperCase"' or '"toLowerCase"'
             if (caseType === 'toUpperCase') {
                     return `String(${string}).toUpperCase()`;
             } else if (caseType === 'toLowerCase') {
