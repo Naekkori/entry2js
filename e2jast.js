@@ -374,11 +374,16 @@ function mapOperator(op) {
  */
 function createSafeStatementGenerator(argIndices, generator) {
     return (node, indent, context) => {
-        const expressions = argIndices.map(i => generateExpression(node.arguments[i], context));
-        if (expressions.some(expr => expr === null)) {
-            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped due to an unimplemented expression.\n`;
+        const results = argIndices.map(i => generateExpression(node.arguments[i], context));
+        const firstError = results.find(res => res && res.error);
+
+        if (firstError) {
+            // 실패한 표현식의 타입을 주석에 포함시킵니다.
+            return `${' '.repeat(indent)}// INFO: Statement for '${node.type}' was skipped because expression '${firstError.type}' is not implemented.\n`;
         }
-        return generator(node, indent, context, expressions);
+
+        // 모든 표현식이 성공적으로 변환되었으면 실제 생성기를 호출합니다.
+        return generator(node, indent, context, results);
     };
 }
 
@@ -1057,7 +1062,7 @@ function generateExpression(arg) {
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
             console.warn(`Unimplemented expression block type: ${arg.type}`);
-            return null;
+            return { error: true, type: arg.type };
     }
 }
 function test_ast(entryScript) {
