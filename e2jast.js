@@ -547,10 +547,12 @@ const statementGenerators = {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
 
-        let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
+        let code = `${' '.repeat(indent)}Entry.iterCheck(${count});\n`;
+        code += `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
 
         if (!hasUnconditionalAwait) {
+            // 반복문 내부에 await가 없는 경우, 브라우저가 멈추는 것을 방지하기 위해 지연을 추가합니다.
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
 
