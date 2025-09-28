@@ -1082,8 +1082,7 @@ function generateExpression(arg) {
         case 'get_value_from_table':{
             const tableId = generateExpression(arg.arguments[0]);
             const rowIndex = generateExpression(arg.arguments[1]);
-            const columnName = generateExpression(arg.arguments[2]);
-            return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex}, ${columnName})`;
+            return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex})`;
         }
         case 'get_value_from_last_row':{
             const tableId = generateExpression(arg.arguments[0]);
