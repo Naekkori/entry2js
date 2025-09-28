@@ -1094,6 +1094,25 @@ function generateExpression(arg) {
             const columnName = generateExpression(arg.arguments[1]);
             return `Entry.CRUD.getValuefromCell(${cellId}, ${columnName})`;
         }
+        case 'calc_values_from_table':{
+            const tableId = generateExpression(arg.arguments[0]);
+            const calc = generateExpression(arg.arguments[1]);
+            const columnName = generateExpression(arg.arguments[2]);
+            return `Entry.CRUD.calcValuesfromTable(${tableId}, ${calc}, ${columnName})`;
+        }
+        case 'get_coefficient':{
+            const matrix = generateExpression(arg.arguments[0]);
+            const field1 = generateExpression(arg.arguments[1]);
+            const field2 = generateExpression(arg.arguments[2]);
+            return `Entry.CRUD.getCoefficient(${matrix}, ${field1}, ${field2})`;
+        }
+        case 'get_value_v_lookup':{
+            const matrix = generateExpression(arg.arguments[0]);
+            const field = generateExpression(arg.arguments[1]);
+            const ReturnField = generateExpression(arg.arguments[2]);
+            const value = generateExpression(arg.arguments[3]);
+            return `Entry.CRUD.getValuevLookup(${matrix}, ${field}, ${ReturnField}, ${value})`;
+        }
         default:
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
