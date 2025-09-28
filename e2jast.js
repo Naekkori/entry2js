@@ -1079,10 +1079,16 @@ function generateExpression(arg) {
             const property = generateExpression(arg.arguments[1]);
             return `Entry.CRUD.getTableCount(${tableId}, ${property})`;
         }
+        case 'get_table_fields': {
+            // get_table_fields 블록은 params에 필드 인덱스를 가집니다.
+            const fieldIndex = arg.arguments[0];
+            return String(fieldIndex); // 인덱스 자체를 반환하여 API에서 처리하도록 합니다.
+        }
         case 'get_value_from_table':{
             const tableId = generateExpression(arg.arguments[0]);
             const rowIndex = generateExpression(arg.arguments[1]);
-            return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex})`;
+            const columnName = generateExpression(arg.arguments[2]);
+            return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex}, ${columnName})`;
         }
         case 'get_value_from_last_row':{
             const tableId = generateExpression(arg.arguments[0]);
