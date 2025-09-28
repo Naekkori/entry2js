@@ -753,6 +753,22 @@ const statementGenerators = {
     'text_flush':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.textFlush();\n`;
     },
+    //데이터 테이블 (추가)
+    'append_row_to_table': createSafeStatementGenerator([0, 1], (node, indent, context, [tableID, row]) =>
+        `${' '.repeat(indent)}Entry.CRUD.appendRowtoTable(${tableID}, ${row});\n`
+    ),
+    'insert_row_to_table': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [tableID, index, row]) =>
+        `${' '.repeat(indent)}Entry.CRUD.insertRowtoTable(${tableID}, ${index}, ${row});\n`
+    ),
+    'delete_row_from_table': createSafeStatementGenerator([0, 1], (node, indent, context, [tableID, index]) =>
+        `${' '.repeat(indent)}Entry.CRUD.deleteRowfromTable(${tableID}, ${index});\n`
+    ),
+    'set_value_from_table': createSafeStatementGenerator([0, 1, 2, 3], (node, indent, context, [tableID, rowIndex, columnName, value]) =>
+        `${' '.repeat(indent)}Entry.CRUD.setValuefromTable(${tableID}, ${rowIndex}, ${columnName}, ${value});\n`
+    ),
+    'set_value_from_cell': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [cellID, columnName, value]) =>
+        `${' '.repeat(indent)}Entry.CRUD.setValuefromCell(${cellID}, ${columnName}, ${value});\n`
+    ),
 };
 
 function generateStatement(node, indent = 0, context = {}) {
@@ -1057,7 +1073,28 @@ function generateExpression(arg) {
             // The param name is derived from its unique block type
             return getParamName(arg);
         }
-
+        // 데이터 테이블
+        case 'get_table_count': {
+            const tableId = generateExpression(arg.arguments[0]);
+            const property = generateExpression(arg.arguments[1]);
+            return `Entry.CRUD.getTableCount(${tableId}, ${property})`;
+        }
+        case 'get_value_from_table':{
+            const tableId = generateExpression(arg.arguments[0]);
+            const rowIndex = generateExpression(arg.arguments[1]);
+            const columnName = generateExpression(arg.arguments[2]);
+            return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex}, ${columnName})`;
+        }
+        case 'get_value_from_last_row':{
+            const tableId = generateExpression(arg.arguments[0]);
+            const columnName = generateExpression(arg.arguments[1]);
+            return `Entry.CRUD.getValuefromLastRow(${tableId}, ${columnName})`;
+        }
+        case 'get_value_from_cell':{
+            const cellId = generateExpression(arg.arguments[0]);
+            const columnName = generateExpression(arg.arguments[1]);
+            return `Entry.CRUD.getValuefromCell(${cellId}, ${columnName})`;
+        }
         default:
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.

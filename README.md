@@ -27,23 +27,23 @@ tags 를 누르면 다른버전 도 받을수 있습니다.
 
 ## 🛠️ 데이터 조작 블록
 
-- [ ] 테이블에 **새 행을 추가**하는 함수/메서드 구현. (참조: `append_row_to_table` - `appendRow`).
-- [ ] 테이블에 **새 열을 추가**하는 함수/메서드 구현. (참조: `append_row_to_table` - `appendCol`).
-- [ ] 지정된 인덱스에 **새 행을 삽입**하는 함수/메서드 구현. (참조: `insert_row_to_table` - `insertRow`).
-- [ ] 지정된 인덱스에 **새 열을 삽입**하는 함수/메서드 구현. (참조: `insert_row_to_table` - `insertCol`).
-- [ ] 지정된 인덱스의 **행을 삭제**하는 함수/메서드 구현. (참조: `delete_row_from_table` - `deleteRow`).
-- [ ] 지정된 인덱스의 **열을 삭제**하는 함수/메서드 구현. (참조: `delete_row_from_table` - `deleteCol`).
-- [ ] 행 인덱스와 열 헤더/인덱스를 사용하여 셀의 **값을 설정**하는 함수/메서드 구현. (참조: `set_value_from_table`).
-- [ ] Excel 스타일 셀 참조(예: "A2")를 사용하여 셀의 **값을 설정**하는 함수/메서드 구현. (참조: `set_value_from_cell`).
+- [x] 테이블에 **새 행을 추가**하는 함수/메서드 구현. (참조: `append_row_to_table` - `appendRow`).
+- [x] 테이블에 **새 열을 추가**하는 함수/메서드 구현. (참조: `append_row_to_table` - `appendCol`).
+- [x] 지정된 인덱스에 **새 행을 삽입**하는 함수/메서드 구현. (참조: `insert_row_to_table` - `insertRow`).
+- [x] 지정된 인덱스에 **새 열을 삽입**하는 함수/메서드 구현. (참조: `insert_row_to_table` - `insertCol`).
+- [x] 지정된 인덱스의 **행을 삭제**하는 함수/메서드 구현. (참조: `delete_row_from_table` - `deleteRow`).
+- [x] 지정된 인덱스의 **열을 삭제**하는 함수/메서드 구현. (참조: `delete_row_from_table` - `deleteCol`).
+- [x] 행 인덱스와 열 헤더/인덱스를 사용하여 셀의 **값을 설정**하는 함수/메서드 구현. (참조: `set_value_from_table`).
+- [x] Excel 스타일 셀 참조(예: "A2")를 사용하여 셀의 **값을 설정**하는 함수/메서드 구현. (참조: `set_value_from_cell`).
 
 ---
 
 ## 📊 데이터 검색 및 계산 블록
 
-- [ ] 테이블의 **행 개수**를 가져오는 함수/메서드 구현 (헤더를 포함하여 데이터 배열 길이 + 1). (참조: `get_table_count` - 'ROW').
-- [ ] 테이블의 **열 개수**를 가져오는 함수/메서드 구현 (필드 길이). (참조: `get_table_count` - 'COL').
-- [ ] 행 인덱스와 열 헤더/인덱스를 사용하여 셀의 **값을 가져오는** 함수/메서드 구현. (참조: `get_value_from_table`).
-- [ ] 지정된 열의 **마지막 행**에서 **값을 가져오는** 함수/메서드 구현. (참조: `get_value_from_last_row`).
+- [x] 테이블의 **행 개수**를 가져오는 함수/메서드 구현 (헤더를 포함하여 데이터 배열 길이 + 1). (참조: `get_table_count` - 'ROW').
+- [x] 테이블의 **열 개수**를 가져오는 함수/메서드 구현 (필드 길이). (참조: `get_table_count` - 'COL').
+- [x] 행 인덱스와 열 헤더/인덱스를 사용하여 셀의 **값을 가져오는** 함수/메서드 구현. (참조: `get_value_from_table`).
+- [x] 지정된 열의 **마지막 행**에서 **값을 가져오는** 함수/메서드 구현. (참조: `get_value_from_last_row`).
 - [ ] Excel 스타일 셀 참조를 사용하여 셀의 **값을 가져오는** 함수/메서드 구현. (참조: `get_value_from_cell`).
 - [ ] **열별 계산** 함수 구현:
     - [ ] 합계 (SUM)
