@@ -1,10 +1,10 @@
 {
   "name": "entry2js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Entry Project to FastEntry javascript transpiler",
   "main": "app.js",
   "type": "module",
- "scripts": {
+  "scripts": {
     "start": "electron .",
     "build:osx": "electron-builder --mac",
     "build:linux": "npm run build:linux32 && npm run build:linux64",
