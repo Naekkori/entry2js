@@ -311,11 +311,6 @@ function generateEventHandler(node, config) {
     code += `Entry.on('${config.event}', async (${param}) => {\n`;
     currentIndent += 2; // Indent for the event handler body
 
-    if (config.event === "clone_start" || config.event === "clone_created") {
-        code += `${' '.repeat(currentIndent)}if (Entry.isClone()) {\n`;
-        currentIndent += 2; // Indent for the Entry.isClone() block
-    }
-
     if (condition) {
         code += `${' '.repeat(currentIndent)}if (${condition}) {\n`;
         currentIndent += 2; // Indent for the condition block
@@ -328,11 +323,6 @@ function generateEventHandler(node, config) {
 
     if (condition) {
         currentIndent -= 2; // De-indent for the condition block
-        code += `${' '.repeat(currentIndent)}}\n`;
-    }
-
-    if (config.event === "clone_start" || config.event === "clone_created") {
-        currentIndent -= 2; // De-indent for the Entry.isClone() block
         code += `${' '.repeat(currentIndent)}}\n`;
     }
 
