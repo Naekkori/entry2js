@@ -400,7 +400,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
     ),
     'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
-        `${' '.repeat(indent)}await Entry.moveXYtime(${x}, ${y}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.moveXYtime(Entry.getX() + ${x}, Entry.getY() + ${y}, ${time});\n`
     ),
     'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
         `${' '.repeat(indent)}await Entry.moveXYtime(${x}, ${y}, ${time});\n`
@@ -408,23 +408,29 @@ const statementGenerators = {
     'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
     ),
+    // 'rotate_relative'는 모양의 각도를, 'direction_relative'는 이동 방향을 바꿉니다. (별개 기능)
     'direction_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
-        `${' '.repeat(indent)}Entry.rotateRelative(${angle});\n`
+        `${' '.repeat(indent)}Entry.turnRelative(${angle});\n`
     ),
     'rotate_by_time': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
         `${' '.repeat(indent)}await Entry.rotateByTime(${angle}, ${time});\n`
     ),
+    // 'rotate_by_time'은 모양의 각도를, 'direction_relative_duration'은 이동 방향을 시간에 따라 바꿉니다. (별개 기능)
     'direction_relative_duration': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, time]) =>
-        `${' '.repeat(indent)}await Entry.rotateByTime(${angle}, ${time});\n`
+        `${' '.repeat(indent)}await Entry.turnByTime(${angle}, ${time});\n`
     ),
     'direction_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
         `${' '.repeat(indent)}Entry.setDirection(${angle});\n`
     ),
-    'see_angle_object': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
-        `${' '.repeat(indent)}Entry.seeAngleObj(${angle});\n`
+    'rotate_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
+        `${' '.repeat(indent)}Entry.setRotation(${angle});\n`
     ),
-    'move_to_angle': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
-        `${' '.repeat(indent)}Entry.moveToangle(${angle});\n`
+    'see_angle_object': createSafeStatementGenerator([0], (node, indent, context, [target]) =>
+        `${' '.repeat(indent)}Entry.seeAngleObj(${target});\n`
+    ),
+    // 'move_direction'은 현재 방향으로, 'move_to_angle'은 지정된 각도로 이동합니다. (별개 기능)
+    'move_to_angle': createSafeStatementGenerator([0, 1], (node, indent, context, [angle, distance]) =>
+        `${' '.repeat(indent)}Entry.moveToAngle(${angle}, ${distance});\n`
     ),
     'sound_something_with_block': createSafeStatementGenerator([0], (node, indent, context, [soundId]) =>
         `${' '.repeat(indent)}Entry.playSound(${soundId});\n`
@@ -622,9 +628,6 @@ const statementGenerators = {
     ),
     'locate_object_time': createSafeStatementGenerator([0, 1], (node, indent, context, [id, time]) =>
         `${' '.repeat(indent)}await Entry.locateObjectTime(${id}, ${time});\n`
-    ),
-    'rotate_absolute': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
-        `${' '.repeat(indent)}Entry.setAngle(${angle});\n`
     ),
     'change_to_next_shape': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.changeShapeNext("next");\n`;
