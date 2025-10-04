@@ -113,7 +113,7 @@ function buildAstFromScript(entryScript) {
             } else {
                 // 함수 정의 블록 처리
                 if (isFunctionDefinition) {
-                    const funcId = firstBlock.id;
+                    const funcId = blockStack.id; // Use the function's own ID from the root of the stack
                     const params = [];
                     let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
 
@@ -121,8 +121,8 @@ function buildAstFromScript(entryScript) {
                     while (currentParamBlock && currentParamBlock.params && currentParamBlock.params[1] && currentParamBlock.params[1].value) {
                         currentParamBlock = currentParamBlock.params[1].value; // 다음 파라미터 블록으로 이동
                         if (currentParamBlock.type.startsWith('function_field_')) {
-                            // 파라미터 블록의 고유 타입(ID)을 이름으로 사용
-                            params.push(getParamName(currentParamBlock.params[0].value));
+                            // 파라미터 블록 자체의 고유 타입(ID)을 이름으로 사용해야 합니다.
+                            params.push(getParamName(currentParamBlock));
                         }
                     }
 
@@ -230,14 +230,16 @@ function codeGen(ast) {
     let generatedCode = '';
 
     // HEADER를 추가합니다.
-    generatedCode += HEADER;
+    generatedCode += HEADER + '\n';
+    generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`;
+
     // 함수를 먼저 정의합니다.
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
         ast.body.forEach(node => {
             if (node.type === "FunctionDefinition") {
                 const funcName = `func_${node.id}`;
                 const params = node.params.join(', ');
-                generatedCode += `async function ${funcName}(${params}) {
+                generatedCode += `Entry.lambda.${funcName} = async function(${params}) {
 `;
                 // 로컬 변수 선언
                 if (node.localVariables.length > 0) {
@@ -247,7 +249,7 @@ function codeGen(ast) {
                 node.body.forEach(blockNode => {
                     generatedCode += generateStatement(blockNode, 4);
                 });
-                generatedCode += `}
+                generatedCode += `};
 
 `;
             }
@@ -596,8 +598,8 @@ const statementGenerators = {
     ),
     'function_general': (node, indent, context) => {
         const funcName = `func_${node.funcId}`;
-        const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
-        return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
+        const args = node.arguments.map(arg => generateExpression(arg, context)).join(', ');
+        return `${' '.repeat(indent)}await Entry.lambda.${funcName}(${args});\n`;
     },
     'set_variable': createSafeStatementGenerator([0, 1], (node, indent, context, [varid, value]) =>
         `${' '.repeat(indent)}Entry.variableContainer.setVariable(${varid}, ${value});\n`
@@ -769,10 +771,10 @@ function generateStatement(node, indent = 0, context = {}) {
 
     // Handle dynamic function call blocks (e.g., 'func_abcdef')
     if (!generator && node.type.startsWith('func_')) {
-        generator = (node, indent, context) => {
+        generator = (node, indent, context) => { // context를 받도록 수정
             const funcName = `func_${node.funcId || node.type.substring(5)}`;
-            const args = node.arguments.map(arg => generateExpression(arg)).join(', ');
-            return `${' '.repeat(indent)}await ${funcName}(${args});\n`;
+            const args = node.arguments.map(arg => generateExpression(arg, context)).join(', '); // Pass context
+            return `${' '.repeat(indent)}await Entry.lambda.${funcName}(${args});\n`;
         };
     }
     return generator ? generator(node, indent, context) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
@@ -1049,8 +1051,8 @@ function generateExpression(arg) {
         }
         case 'function_value': {
             const funcName = `func_${arg.funcId}`;
-            const args = arg.arguments.map(a => generateExpression(a)).join(', ');
-            return `await ${funcName}(${args})`;
+            const args = arg.arguments.map(a => generateExpression(a, {})).join(', '); // context can be empty here
+            return `await Entry.lambda.${funcName}(${args})`;
         }
         case 'calc_rand': {
             const min = generateExpression(arg.arguments[0]);
@@ -1063,8 +1065,8 @@ function generateExpression(arg) {
         }
         case 'function_param_string':
         case 'function_param_boolean': {
-            // The param name is derived from its unique block type
-            return getParamName(arg);
+            // 함수 파라미터 블록을 올바른 변수 이름으로 변환합니다.
+            return toJsId(arg.type);
         }
         // 데이터 테이블
         case 'get_table_count': {
