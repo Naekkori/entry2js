@@ -42,7 +42,7 @@ function getParamName(paramBlock) {
  * @param {string} entryScript - 파싱할 스크립트 JSON 문자열
  * @returns {object} - 생성된 AST (최상위 Program 노드)
  */
-function buildAstFromScript(entryScript) {
+function buildAstFromScript(entryScript, functionId = undefined) {
     // 최상위 Program 노드를 생성합니다.
     const programAst = {
         type: "Program",
@@ -113,7 +113,9 @@ function buildAstFromScript(entryScript) {
             } else {
                 // 함수 정의 블록 처리
                 if (isFunctionDefinition) {
-                    const funcId = blockStack.id; // Use the function's own ID from the root of the stack
+                    // project.json의 함수 ID가 있으면 사용하고, 없으면 스크립트 내의 ID를 사용합니다.
+                    // 스크립트 내의 ID는 'l0uw'와 같은 형태일 수 있습니다.
+                    const funcId = functionId || firstBlock.id;
                     const params = [];
                     let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
 
@@ -178,8 +180,11 @@ function findLocalVariables(body) {
  * @returns {object} - 변환된 AST 노드
  */
 function convertBlockToAstNode(block) {
-    // Copy funcId if it exists (for function call blocks). It's often in block.data.
-    const funcId = block.funcId || (block.data ? block.data.funcId : undefined);
+    let funcId = block.funcId || (block.data ? block.data.funcId : undefined);
+    // 함수 호출 블록(예: 'func_epqt')에서 funcId를 추출합니다.
+    if (!funcId && block.type.startsWith('func_')) {
+        funcId = block.type.substring(5);
+    }
     const astNode = {
         type: block.type, // 블록 타입 그대로 사용
         // params 배열을 순회하며, 각 파라미터가 블록(객체이며 type 속성을 가짐)이면
@@ -1068,6 +1073,7 @@ function generateExpression(arg) {
             // 함수 파라미터 블록을 올바른 변수 이름으로 변환합니다.
             return toJsId(arg.type);
         }
+
         // 데이터 테이블
         case 'get_table_count': {
             const tableId = generateExpression(arg.arguments[0]);
@@ -1115,14 +1121,21 @@ function generateExpression(arg) {
             return `Entry.CRUD.getValuevLookup(${matrix}, ${field}, ${ReturnField}, ${value})`;
         }
         default:
+            // 함수 본문 내에서 사용되는 파라미터 블록 처리 (e.g., 'stringParam_o86u')
+            if (arg.type.startsWith('stringParam_') || arg.type.startsWith('booleanParam_')) {
+                // 이 블록들은 함수 정의 시 생성된 파라미터의 ID를 참조합니다.
+                // 이 ID를 JS 변수명으로 변환하여 반환합니다.
+                return toJsId(arg.arguments[0]);
+            }
+
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
             console.warn(`Unimplemented expression block type: ${arg.type}`);
             return { error: true, type: arg.type };
     }
 }
-function test_ast(entryScript) {
-    const ast = buildAstFromScript(entryScript);
+function test_ast(entryScript, functionId) {
+    const ast = buildAstFromScript(entryScript, functionId);
     return ast;
 }
 
