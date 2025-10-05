@@ -115,7 +115,7 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                 if (isFunctionDefinition) {
                     // project.json의 함수 ID가 있으면 사용하고, 없으면 스크립트 내의 ID를 사용합니다.
                     // 스크립트 내의 ID는 'l0uw'와 같은 형태일 수 있습니다.
-                    const funcId = functionId || firstBlock.data?.funcId || firstBlock.id;
+                    const funcId = functionId || firstBlock.id;
                     const params = [];
                     
                     // 함수 정의 블록의 파라미터를 재귀적으로 탐색하는 함수
@@ -193,9 +193,9 @@ function findLocalVariables(body) {
  * @returns {object} - 변환된 AST 노드
  */
 function convertBlockToAstNode(block) {
-    let funcId = block.funcId || (block.data ? block.data.funcId : undefined);
+    let funcId = undefined;
     // 함수 호출 블록(예: 'func_epqt')에서 funcId를 추출합니다.
-    if (!funcId && block.type.startsWith('func_')) {
+    if (block.type.startsWith('func_')) {
         funcId = block.type.substring(5);
     }
     let paramId = null;
