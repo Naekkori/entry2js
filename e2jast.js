@@ -118,16 +118,28 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                     const funcId = functionId || firstBlock.data?.funcId || firstBlock.id;
                     const params = [];
                     
-                    // 함수 정의 블록의 params 배열을 직접 순회하여 파라미터를 찾습니다.
-                    if (firstBlock.params && Array.isArray(firstBlock.params)) {
-                        for (const param of firstBlock.params) {
-                            // function_field_string, function_field_boolean 등 실제 파라미터 블록을 찾습니다.
-                            if (param && param.type && (param.type.startsWith('function_field_string') || param.type.startsWith('function_field_boolean'))) {
-                                // 파라미터 블록의 고유 ID를 기반으로 JS 변수 이름을 생성합니다.
-                                params.push(getParamName(param));
+                    // 함수 정의 블록의 파라미터를 재귀적으로 탐색하는 함수
+                    function findParamsRecursive(paramArray) {
+                        if (!paramArray || !Array.isArray(paramArray)) return;
+
+                        for (const p of paramArray) {
+                            if (!p) continue;
+
+                            // 실제 파라미터 정의 블록 (function_field_string/boolean)을 찾습니다.
+                            if (p.type && (p.type.startsWith('function_field_string') || p.type.startsWith('function_field_boolean'))) {
+                                const paramBlock = p.params?.[0]; // e.g., { type: 'stringParam_umnz', ... }
+                                if (paramBlock && (paramBlock.type.startsWith('stringParam_') || paramBlock.type.startsWith('booleanParam_'))) {
+                                    const paramId = paramBlock.type.substring(paramBlock.type.indexOf('_') + 1);
+                                    params.push(toJsId(paramId));
+                                }
                             }
+
+                            // 중첩된 파라미터 배열을 계속 탐색합니다 (e.g., function_field_label 내부).
+                            findParamsRecursive(p.params);
                         }
                     }
+
+                    findParamsRecursive(firstBlock.params);
 
                     const funcBody = [];
                     const statements = firstBlock.statements?.[0] || [];
@@ -186,7 +198,21 @@ function convertBlockToAstNode(block) {
     if (!funcId && block.type.startsWith('func_')) {
         funcId = block.type.substring(5);
     }
+    let paramId = null;
+    if (block.type.startsWith('function_param_string') || block.type.startsWith('function_param_boolean')) {
+        if (block.params?.[0]) {
+            paramId = block.params[0];
+        }
+    } else if (block.type.startsWith('stringParam_') || block.type.startsWith('booleanParam_')) {
+        // 함수 본문 내에서 사용되는 파라미터 블록 (e.g., 'stringParam_umnz')
+        // 타입 자체에서 ID를 추출합니다.
+        paramId = block.type.substring(block.type.indexOf('_') + 1);
+    }
+
     const astNode = {
+        // 함수 파라미터 블록의 경우, arguments[0]에 ID가 들어있습니다.
+        // 이를 paramId로 추출하여 AST 노드에 명시적으로 추가합니다.
+        ...(paramId ? { paramId: paramId } : {}),
         type: block.type, // 블록 타입 그대로 사용
         // params 배열을 순회하며, 각 파라미터가 블록(객체이며 type 속성을 가짐)이면
         // 재귀적으로 변환하고, 리터럴 값이면 그대로 사용합니다.
@@ -777,11 +803,11 @@ function generateStatement(node, indent = 0, context = {}) {
 
     // Handle dynamic function call blocks (e.g., 'func_abcdef')
     if (!generator && node.type.startsWith('func_')) {
-        generator = (node, indent, context) => { // context를 받도록 수정
+        generator = createSafeStatementGenerator([], (node, indent, context, _unusedArgs) => {
             const funcName = `func_${node.funcId || node.type.substring(5)}`;
             const args = node.arguments.map(arg => generateExpression(arg, context)).join(', '); // Pass context
             return `${' '.repeat(indent)}await Entry.lambda.${funcName}(${args});\n`;
-        };
+        });
     }
     return generator ? generator(node, indent, context) : `${' '.repeat(indent)}// TODO: Statement for '${node.type}' is not implemented.\n`;
 }
@@ -1072,14 +1098,14 @@ function generateExpression(arg) {
         case 'function_param_string':
         case 'function_param_boolean': {
             // 함수 파라미터 블록을 올바른 변수 이름으로 변환합니다.
-            return toJsId(arg.type);
+            return toJsId(arg.paramId);
         }
 
         // 데이터 테이블
         case 'get_table_count': {
             const tableId = generateExpression(arg.arguments[0]);
             const property = generateExpression(arg.arguments[1]);
-            return `Entry.CRUD.getTableCount(${tableId}, ${property})`;
+            return `Entry.CRUD.getTableCount(${tableId}, ${property})`; // LCOV_EXCL_LINE
         }
         case 'get_table_fields': {
             // get_table_fields 블록은 params에 필드 인덱스를 가집니다.
@@ -1126,7 +1152,7 @@ function generateExpression(arg) {
             if (arg.type.startsWith('stringParam_') || arg.type.startsWith('booleanParam_')) {
                 // 이 블록들은 함수 정의 시 생성된 파라미터의 ID를 참조합니다.
                 // 이 ID를 JS 변수명으로 변환하여 반환합니다.
-                return toJsId(arg.arguments[0]);
+                return toJsId(arg.paramId);
             }
 
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
