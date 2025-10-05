@@ -115,16 +115,17 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                 if (isFunctionDefinition) {
                     // project.json의 함수 ID가 있으면 사용하고, 없으면 스크립트 내의 ID를 사용합니다.
                     // 스크립트 내의 ID는 'l0uw'와 같은 형태일 수 있습니다.
-                    const funcId = functionId || firstBlock.id;
+                    const funcId = functionId || firstBlock.data?.funcId || firstBlock.id;
                     const params = [];
-                    let currentParamBlock = firstBlock.params[0]?.value; // function_field_label
-
-                    // 파라미터 체인 순회 (function_field_label -> function_field_string -> ...)
-                    while (currentParamBlock && currentParamBlock.params && currentParamBlock.params[1] && currentParamBlock.params[1].value) {
-                        currentParamBlock = currentParamBlock.params[1].value; // 다음 파라미터 블록으로 이동
-                        if (currentParamBlock.type.startsWith('function_field_')) {
-                            // 파라미터 블록 자체의 고유 타입(ID)을 이름으로 사용해야 합니다.
-                            params.push(getParamName(currentParamBlock));
+                    
+                    // 함수 정의 블록의 params 배열을 직접 순회하여 파라미터를 찾습니다.
+                    if (firstBlock.params && Array.isArray(firstBlock.params)) {
+                        for (const param of firstBlock.params) {
+                            // function_field_string, function_field_boolean 등 실제 파라미터 블록을 찾습니다.
+                            if (param && param.type && (param.type.startsWith('function_field_string') || param.type.startsWith('function_field_boolean'))) {
+                                // 파라미터 블록의 고유 ID를 기반으로 JS 변수 이름을 생성합니다.
+                                params.push(getParamName(param));
+                            }
                         }
                     }
 
