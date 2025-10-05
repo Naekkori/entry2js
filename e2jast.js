@@ -364,6 +364,40 @@ function generateEventHandler(node, config) {
     return code;
 }
 /**
+ * AST 노드 배열을 재귀적으로 탐색하여 'await'를 유발하는 블록이 있는지 확인합니다.
+ * @param {object[]} nodes - 검사할 AST 노드의 배열
+ * @returns {boolean} 'await'를 유발하는 블록이 있으면 true, 그렇지 않으면 false
+ */
+function containsAwait(nodes) {
+    if (!nodes || !Array.isArray(nodes)) {
+        return false;
+    }
+
+    // 'await'를 생성하는 블록 타입 목록
+    const awaitableTypes = [
+        'wait_second', 'wait_until_true', 'ask_and_wait',
+        'locate_object_time', 'move_xy_time', 'locate_xy_time',
+        'rotate_by_time', 'direction_relative_duration',
+        'sound_something_wait_with_block', 'sound_something_second_wait_with_block',
+        'sound_from_to_and_wait', 'function_value'
+    ];
+
+    for (const node of nodes) {
+        if (!node) continue;
+
+        // 현재 노드가 awaitable 타입이거나 함수 호출 블록인 경우
+        if (awaitableTypes.includes(node.type) || node.type.startsWith('func_')) {
+            return true;
+        }
+
+        // 중첩된 statements 배열이 있다면 재귀적으로 탐색
+        if (node.statements && node.statements.some(stmtList => containsAwait(stmtList))) {
+            return true;
+        }
+    }
+    return false;
+}
+/**
  * 엔트리의 연산자 문자열을 JavaScript 연산자로 변환합니다.
  * @param {string} op - 엔트리 연산자 (예: "PLUS", "MINUS", "EQUAL")
  * @returns {string} JavaScript 연산자 (예: "+", "-", "===")
@@ -548,9 +582,7 @@ const statementGenerators = {
     }),
     'repeat_inf': (node, indent, context) => {
         const statements = node.statements[0] || [];
-        const hasUnconditionalAwait = statements.some(stmt =>
-            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
-        );
+        const hasAwait = containsAwait(statements);
 
         let bodyCode = '';
         statements.forEach(stmt => {
@@ -560,7 +592,7 @@ const statementGenerators = {
         let code = `${' '.repeat(indent)}while(true) {\n`;
         code += bodyCode;
 
-        if (!hasUnconditionalAwait) {
+        if (!hasAwait) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
 
@@ -573,20 +605,18 @@ const statementGenerators = {
         const newContext = { ...context, loopLevel: loopLevel + 1 };
 
         const statements = node.statements[0] || [];
-        const hasUnconditionalAwait = statements.some(stmt =>
-            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
-        );
+        const hasAwait = containsAwait(statements);
 
         let bodyCode = '';
         statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
 
-        let code = `${' '.repeat(indent)}Entry.iterCheck(${count});\n`;
+        let code = `${' '.repeat(indent)}await Entry.iterCheck(${count});\n`;
         code += `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
 
-        if (!hasUnconditionalAwait) {
+        if (!hasAwait) {
             // 반복문 내부에 await가 없는 경우, 브라우저가 멈추는 것을 방지하기 위해 지연을 추가합니다.
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
@@ -599,9 +629,7 @@ const statementGenerators = {
         const finalCondition = option === 'until' ? `!(${conditionExpr})` : conditionExpr;
 
         const statements = node.statements[0] || [];
-        const hasUnconditionalAwait = statements.some(stmt =>
-            ['wait_second', 'wait_until_true', 'function_general', 'ask_and_wait'].includes(stmt.type)
-        );
+        const hasAwait = containsAwait(statements);
 
         let bodyCode = '';
         statements.forEach(stmt => {
@@ -611,7 +639,7 @@ const statementGenerators = {
         let code = `${' '.repeat(indent)}while (${finalCondition}) {\n`;
         code += bodyCode;
 
-        if (!hasUnconditionalAwait) {
+        if (!hasAwait) {
             code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
         }
 
