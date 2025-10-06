@@ -879,7 +879,26 @@ function generateExpression(arg, context = {}) {
         
           return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
         }
-        case 'number': return String(arg.arguments[0] || 0);
+        case 'number': {
+            const raw = arg.arguments?.[0];
+            // 'number' 블록의 값이 null, undefined, 또는 빈 문자열일 경우 0으로 처리합니다.
+            if (raw === null || typeof raw === 'undefined' || String(raw).trim() === '') {
+                return '0';
+            }
+            const s = String(raw);
+
+            // 'text' 블록과 동일한 숫자 판별 로직을 적용합니다.
+            const isRadixLiteral =
+                /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
+                /^[-+]?0[oO][0-7]+$/.test(s) ||
+                /^[-+]?0[bB][01]+$/.test(s);
+            const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+
+            if (isRadixLiteral || isNumericString) {
+                return s.trim(); // 명확한 숫자 형식이면 그대로 반환합니다.
+            }
+            return JSON.stringify(s); // 숫자 형식이 아니면 안전하게 문자열로 처리합니다.
+        }
         // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
         case 'True': return 'true';
         case 'False': return 'false';
