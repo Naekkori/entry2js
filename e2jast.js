@@ -1085,10 +1085,18 @@ function generateExpression(arg, context = {}) {
         }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
-            const left = generateExpression(arg.arguments[0], context);
+            const leftExpr = generateExpression(arg.arguments[0], context);
             const op = mapOperator(arg.arguments[1]);
-            const right = generateExpression(arg.arguments[2], context);
-            return `(${left} ${op} ${right})`;
+            const rightExpr = generateExpression(arg.arguments[2], context);
+
+            // 표현식에 await가 포함되어 있는지 확인
+            if (leftExpr.includes('await') || rightExpr.includes('await')) {
+                // await가 포함된 경우, async 즉시 실행 함수로 감싸서 Promise를 반환하도록 합니다.
+                return `(async () => { return ${leftExpr} ${op} ${rightExpr} })()`;
+            } else {
+                // await가 없으면 기존 방식대로 괄호로만 감쌉니다.
+                return `(${leftExpr} ${op} ${rightExpr})`;
+            }
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
