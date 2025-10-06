@@ -1182,6 +1182,13 @@ function generateExpression(arg) {
                 // 이 ID를 JS 변수명으로 변환하여 반환합니다.
                 return toJsId(arg.paramId);
             }
+            // 값을 반환하는 함수 호출 블록 처리 (e.g., 'func_owwk')
+            if (arg.type.startsWith('func_')) {
+                const funcId = arg.funcId || arg.type.substring(5);
+                const funcName = `func_${funcId}`;
+                const args = arg.arguments.map(a => generateExpression(a)).join(', ');
+                return `await Entry.lambda.${funcName}(${args})`;
+            }
 
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
