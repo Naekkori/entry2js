@@ -845,7 +845,7 @@ function generateStatement(node, indent = 0, context = {}) {
  * @param {object|string|number} arg - 변환할 인자 (AST 노드 또는 리터럴)
  * @returns {string} 생성된 JavaScript 표현식
  */
-function generateExpression(arg) {
+function generateExpression(arg, context = {}) {
     // 인자가 블록(객체)이 아닌 리터럴 값일 경우
     if (typeof arg !== 'object' || arg === null) {
         // 값의 타입에 따라 처리: 문자열은 따옴표로 감싸고, 숫자는 그대로 둡니다.
@@ -867,13 +867,14 @@ function generateExpression(arg) {
             /^[-+]?0[oO][0-7]+$/.test(s) ||
             /^[-+]?0[bB][01]+$/.test(s);
         
-          if (s.trim() !== '' && (isRadixLiteral || Number.isFinite(Number(s)))) {
+          // 명확한 숫자 패턴(정수, 부동소수점, 과학적 표기법)에 맞는지 확인합니다.
+          const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+
+          if (s.trim() !== '' && (isRadixLiteral || isNumericString)) {
             if (isRadixLiteral) {
               return s;
             }
-            const n = Number(s);
-            // -0 보존
-            return Object.is(n, -0) ? '-0' : String(n); // 선행 0, 공백 등 정규화
+            return s.trim(); // 숫자 문자열은 그대로 반환
           }
         
           return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
@@ -884,63 +885,63 @@ function generateExpression(arg) {
         case 'False': return 'false';
         // 계산 블록 처리
         case 'calc_basic': {
-            const left = generateExpression(arg.arguments[0]);
+            const left = generateExpression(arg.arguments[0], context);
             const op = mapOperator(arg.arguments[1]);
-            const right = generateExpression(arg.arguments[2]);
+            const right = generateExpression(arg.arguments[2], context);
             return `(${left} ${op} ${right})`;
         }
         case 'distance_something': {
-            const target = generateExpression(arg.arguments[0]);
+            const target = generateExpression(arg.arguments[0], context);
             return `Entry.getDistance(${target})`;
         }
         case 'calc_operation': {
-            const left = generateExpression(arg.arguments[0]);
-            const op = mapOperator(arg.arguments[1])
+            const left = generateExpression(arg.arguments[0], context);
+            const op = mapOperator(arg.arguments[1]);
             return `Entry.calcOperation(${left},${op})`;
         }
         case 'length_of_string': {
-            const string = generateExpression(arg.arguments[0]);
+            const string = generateExpression(arg.arguments[0], context);
             return `String(${string}).length`;
         }
         case 'reverse_of_string': {
-            const string = generateExpression(arg.arguments[0]);
+            const string = generateExpression(arg.arguments[0], context);
             return `Entry.reverseOfstr(${string})`;
         }
         case 'combine_something': {
-            const left = generateExpression(arg.arguments[0]);
-            const right = generateExpression(arg.arguments[1]);
+            const left = generateExpression(arg.arguments[0], context);
+            const right = generateExpression(arg.arguments[1], context);
             return `String(${left}) + String(${right})`;
         }
         case 'char_at': {
-            const string = generateExpression(arg.arguments[0]);
-            const index = generateExpression(arg.arguments[1]);
+            const string = generateExpression(arg.arguments[0], context);
+            const index = generateExpression(arg.arguments[1], context);
             return `Entry.charAt(${string},${index})`;
         }
         case 'substring': {
-            const string = generateExpression(arg.arguments[0]);
-            const start = generateExpression(arg.arguments[1]);
-            const end = generateExpression(arg.arguments[2]);
+            const string = generateExpression(arg.arguments[0], context);
+            const start = generateExpression(arg.arguments[1], context);
+            const end = generateExpression(arg.arguments[2], context);
             return `String(${string}).substring(${start} - 1, ${end})`;
         }
         case 'count_match_string': {
-            const string = generateExpression(arg.arguments[0]);
-            const pattern = generateExpression(arg.arguments[1]);
+            const string = generateExpression(arg.arguments[0], context);
+            const pattern = generateExpression(arg.arguments[1], context);
             return `Entry.countMatchString(${string},${pattern})`;
         }
         case 'index_of_string': {
-            const string = generateExpression(arg.arguments[0]);
-            const pattern = generateExpression(arg.arguments[1]);
+            const string = generateExpression(arg.arguments[0], context);
+            const pattern = generateExpression(arg.arguments[1], context);
             return `Entry.indexOfString(${string},${pattern})`;
         }
         case 'replace_string': {
-            const string = generateExpression(arg.arguments[0]);
-            const pattern = generateExpression(arg.arguments[1]);
-            const replacement = generateExpression(arg.arguments[2]);
+            const string = generateExpression(arg.arguments[0], context);
+            const pattern = generateExpression(arg.arguments[1], context);
+            const replacement = generateExpression(arg.arguments[2], context);
             return `String(${string}).replace(${pattern}, ${replacement})`;
         }
         case 'change_string_case': {
-            const string = generateExpression(arg.arguments[0]);
-            const caseType = generateExpression(arg.arguments[1]);
+            const string = generateExpression(arg.arguments[0], context);
+            const caseType = generateExpression(arg.arguments[1], context);
             if (caseType === 'toUpperCase') {
                     return `String(${string}).toUpperCase()`;
             } else if (caseType === 'toLowerCase') {
@@ -954,36 +955,36 @@ function generateExpression(arg) {
         case 'get_sound_speed':
             return `Entry.getSoundSpeed()`;
         case 'get_sound_duration': {
-            const soundId = generateExpression(arg.arguments[0]);
+            const soundId = generateExpression(arg.arguments[0], context);
             return `Entry.getSoundDuration(${soundId})`;
         }
         case 'get_block_count': {
-            const target = generateExpression(arg.arguments[0]);
+            const target = generateExpression(arg.arguments[0], context);
             return `Entry.getBlockCount(${target})`;
         }
         case 'change_rgb_to_hex': {
-            const r = generateExpression(arg.arguments[0]);
-            const g = generateExpression(arg.arguments[1]);
-            const b = generateExpression(arg.arguments[2]);
+            const r = generateExpression(arg.arguments[0], context);
+            const g = generateExpression(arg.arguments[1], context);
+            const b = generateExpression(arg.arguments[2], context);
             return `Entry.rgbToHex(${r},${g},${b})`;
         }
         case 'change_hex_to_rgb': {
-            const hex = generateExpression(arg.arguments[0]);
+            const hex = generateExpression(arg.arguments[0], context);
             return `Entry.hexToRgb(${hex})`;
         }
         // 리스트
         case 'value_of_index_from_list': {
-            const listId = generateExpression(arg.arguments[0]);
-            const index = generateExpression(arg.arguments[1]);
+            const listId = generateExpression(arg.arguments[0], context);
+            const index = generateExpression(arg.arguments[1], context);
             return `Entry.variableContainer.valueOfIndexList(${listId},${index})`;
         }
         case 'length_of_list':{
-            const listId = generateExpression(arg.arguments[0]);
+            const listId = generateExpression(arg.arguments[0], context);
             return `Entry.variableContainer.lengthOfList(${listId})`;
         }
         case 'is_included_in_list':{
-            const listId = generateExpression(arg.arguments[0]);
-            const value = generateExpression(arg.arguments[1]);
+            const listId = generateExpression(arg.arguments[0], context);
+            const value = generateExpression(arg.arguments[1], context);
             return `Entry.variableContainer.isIncludedInList(${listId},${value})`;
         }
         // 판단
@@ -991,26 +992,26 @@ function generateExpression(arg) {
             return 'Entry.isClicked()';
         }
         case 'is_object_clicked':{
-            const objecId = generateExpression(arg.arguments[0]);
+            const objecId = generateExpression(arg.arguments[0], context);
             return `Entry.isObjectClicked(${objecId})`;
         }
         case 'is_press_some_key':{
-            const keycode = generateExpression(arg.arguments[0]);
+            const keycode = generateExpression(arg.arguments[0], context);
             return `Entry.isPressSomeKey(${keycode})`;
         }
         case 'reach_something':{
-            const Something = generateExpression(arg.arguments[0]);
+            const Something = generateExpression(arg.arguments[0], context);
             return `Entry.reachSomething(${Something})`;
         }
         case 'is_type':{
-            const value = generateExpression(arg.arguments[0]);
-            const type = generateExpression(arg.arguments[1]);
+            const value = generateExpression(arg.arguments[0], context);
+            const type = generateExpression(arg.arguments[1], context);
             return `Entry.isType(${value},${type})`;
         }
         case 'boolean_and_or':{
-            const bop1 = generateExpression(arg.arguments[0]);
+            const bop1 = generateExpression(arg.arguments[0], context);
             const op = arg.arguments[1];
-            const bop2 = generateExpression(arg.arguments[2]);
+            const bop2 = generateExpression(arg.arguments[2], context);
             if (op==='AND') {
                 return `(${bop1} && ${bop2})`;
             } else if (op==='OR') {
@@ -1018,7 +1019,7 @@ function generateExpression(arg) {
             }
         }
         case 'boolean_not':{
-            const bop = generateExpression(arg.arguments[0]);
+            const bop = generateExpression(arg.arguments[0], context);
             return `!${bop}`;
         }
         case 'is_touch_supported':{
@@ -1028,24 +1029,24 @@ function generateExpression(arg) {
             return 'Entry.isBoostMode()';
         }
         case 'is_current_device_type':{
-            const deviceType = generateExpression(arg.arguments[0]);
+            const deviceType = generateExpression(arg.arguments[0], context);
             return `Entry.isCurrentDeviceType(${deviceType})`;
         }
         // 리소스게터
         case 'get_pictures':{
-            const picParam = generateExpression(arg.arguments[0]);
+            const picParam = generateExpression(arg.arguments[0], context);
             return picParam;
         }
         case 'get_sounds':{
-            const soundParam = generateExpression(arg.arguments[0]);
+            const soundParam = generateExpression(arg.arguments[0], context);
             return soundParam;
         }
         case 'angle':{
-            const angleParam = generateExpression(arg.arguments[0]);
+            const angleParam = generateExpression(arg.arguments[0], context);
             return angleParam;
         }
         case 'text_color':{
-            const colorParam = generateExpression(arg.arguments[0]);
+            const colorParam = generateExpression(arg.arguments[0], context);
             return colorParam;
         }
         // 글상자
@@ -1065,26 +1066,26 @@ function generateExpression(arg) {
         }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
-            const left = generateExpression(arg.arguments[0]);
+            const left = generateExpression(arg.arguments[0], context);
             const op = mapOperator(arg.arguments[1]);
-            const right = generateExpression(arg.arguments[2]);
+            const right = generateExpression(arg.arguments[2], context);
             return `(${left} ${op} ${right})`;
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
         case 'coordinate_object': {
             // arg.arguments 예시: ["self","y"]
-            const target = generateExpression(arg.arguments[0]);
-            const prop = generateExpression(arg.arguments[1]);
+            const target = generateExpression(arg.arguments[0], context);
+            const prop = generateExpression(arg.arguments[1], context);
             return `Entry.getObjectCoords(${target}, ${prop})`;
         }
         case 'coordinate_mouse': {
             return `Entry.getMouseCoords().${arg.arguments[0]}`;
         }
         case 'quotient_and_mod': {
-            const left = generateExpression(arg.arguments[0]);
-            const op = generateExpression(arg.arguments[1]);
-            const right = generateExpression(arg.arguments[2]);
+            const left = generateExpression(arg.arguments[0], context);
+            const op = generateExpression(arg.arguments[1], context);
+            const right = generateExpression(arg.arguments[2], context);
             return `Entry.quotientAndmod(${left},${op},${right})`;
         }
         case 'get_project_timer_value': {
@@ -1111,16 +1112,16 @@ function generateExpression(arg) {
         }
         case 'function_value': {
             const funcName = `func_${arg.funcId}`;
-            const args = arg.arguments.map(a => generateExpression(a, {})).join(', '); // context can be empty here
+            const args = arg.arguments.map(a => generateExpression(a, context)).join(', ');
             return `await Entry.lambda.${funcName}(${args})`;
         }
         case 'calc_rand': {
-            const min = generateExpression(arg.arguments[0]);
-            const max = generateExpression(arg.arguments[1]);
+            const min = generateExpression(arg.arguments[0], context);
+            const max = generateExpression(arg.arguments[1], context);
             return `Math.floor(Math.random() * (${max} - ${min} + 1)) + ${min}`;
         }
         case 'get_variable': {
-            const varid = generateExpression(arg.arguments[0]);
+            const varid = generateExpression(arg.arguments[0], context);
             return `Entry.variableContainer.getVariable(${varid})`;
         }
         case 'function_param_string':
@@ -1131,8 +1132,8 @@ function generateExpression(arg) {
 
         // 데이터 테이블
         case 'get_table_count': {
-            const tableId = generateExpression(arg.arguments[0]);
-            const property = generateExpression(arg.arguments[1]);
+            const tableId = generateExpression(arg.arguments[0], context);
+            const property = generateExpression(arg.arguments[1], context);
             return `Entry.CRUD.getTableCount(${tableId}, ${property})`; // LCOV_EXCL_LINE
         }
         case 'get_table_fields': {
@@ -1141,38 +1142,38 @@ function generateExpression(arg) {
             return String(fieldIndex); // 인덱스 자체를 반환하여 API에서 처리하도록 합니다.
         }
         case 'get_value_from_table':{
-            const tableId = generateExpression(arg.arguments[0]);
-            const rowIndex = generateExpression(arg.arguments[1]);
-            const columnName = generateExpression(arg.arguments[2]);
+            const tableId = generateExpression(arg.arguments[0], context);
+            const rowIndex = generateExpression(arg.arguments[1], context);
+            const columnName = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex}, ${columnName})`;
         }
         case 'get_value_from_last_row':{
-            const tableId = generateExpression(arg.arguments[0]);
-            const columnName = generateExpression(arg.arguments[1]);
+            const tableId = generateExpression(arg.arguments[0], context);
+            const columnName = generateExpression(arg.arguments[1], context);
             return `Entry.CRUD.getValuefromLastRow(${tableId}, ${columnName})`;
         }
         case 'get_value_from_cell':{
-            const cellId = generateExpression(arg.arguments[0]);
-            const columnName = generateExpression(arg.arguments[1]);
+            const cellId = generateExpression(arg.arguments[0], context);
+            const columnName = generateExpression(arg.arguments[1], context);
             return `Entry.CRUD.getValuefromCell(${cellId}, ${columnName})`;
         }
         case 'calc_values_from_table':{
-            const tableId = generateExpression(arg.arguments[0]);
-            const calc = generateExpression(arg.arguments[1]);
-            const columnName = generateExpression(arg.arguments[2]);
+            const tableId = generateExpression(arg.arguments[0], context);
+            const calc = generateExpression(arg.arguments[1], context);
+            const columnName = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.calcValuesfromTable(${tableId}, ${calc}, ${columnName})`;
         }
         case 'get_coefficient':{
-            const matrix = generateExpression(arg.arguments[0]);
-            const field1 = generateExpression(arg.arguments[1]);
-            const field2 = generateExpression(arg.arguments[2]);
+            const matrix = generateExpression(arg.arguments[0], context);
+            const field1 = generateExpression(arg.arguments[1], context);
+            const field2 = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.getCoefficient(${matrix}, ${field1}, ${field2})`;
         }
         case 'get_value_v_lookup':{
-            const matrix = generateExpression(arg.arguments[0]);
-            const field = generateExpression(arg.arguments[1]);
-            const ReturnField = generateExpression(arg.arguments[2]);
-            const value = generateExpression(arg.arguments[3]);
+            const matrix = generateExpression(arg.arguments[0], context);
+            const field = generateExpression(arg.arguments[1], context);
+            const ReturnField = generateExpression(arg.arguments[2], context);
+            const value = generateExpression(arg.arguments[3], context);
             return `Entry.CRUD.getValuevLookup(${matrix}, ${field}, ${ReturnField}, ${value})`;
         }
         default:
@@ -1186,13 +1187,13 @@ function generateExpression(arg) {
             if (arg.type.startsWith('func_')) {
                 const funcId = arg.funcId || arg.type.substring(5);
                 const funcName = `func_${funcId}`;
-                const args = arg.arguments.map(a => generateExpression(a)).join(', ');
+                const args = arg.arguments.map(a => generateExpression(a, context)).join(', ');
                 return `await Entry.lambda.${funcName}(${args})`;
             }
 
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
-            console.warn(`Unimplemented expression block type: ${arg.type} objectID: ${arg.objectId}`);
+            console.warn(`Unimplemented expression block type: ${arg.type} objectID: ${context.objectId}`);
             return { error: true, type: arg.type };
     }
 }
