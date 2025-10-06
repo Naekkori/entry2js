@@ -16,9 +16,9 @@ if (Array.isArray(projectJson.objects)) {
     for (const obj of projectJson.objects){
         if (obj&&obj.script){
                 console.log(`오브젝트id:${obj.id} 이름:${obj.name}`)
-                console.log(test_ast(obj.script));
+                console.log(test_ast(obj.script, undefined, obj.id));
                 console.log("CodeGen");
-                console.log(codeGen(test_ast(obj.script)));
+                console.log(codeGen(test_ast(obj.script, undefined, obj.id), obj.id));
         }
     }
 }

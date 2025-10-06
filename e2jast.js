@@ -42,7 +42,7 @@ function getParamName(paramBlock) {
  * @param {string} entryScript - 파싱할 스크립트 JSON 문자열
  * @returns {object} - 생성된 AST (최상위 Program 노드)
  */
-function buildAstFromScript(entryScript, functionId = undefined) {
+function buildAstFromScript(entryScript, functionId = undefined, objectId = undefined) {
     // 최상위 Program 노드를 생성합니다.
     const programAst = {
         type: "Program",
@@ -92,8 +92,8 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                         const block = blockStack[i];
                         if (block && typeof block.type === 'string') {
                             // 개별 블록을 AST 노드로 변환합니다.
-                            // statements는 재귀적으로 처리될 수 있도록 구조를 유지합니다.
-                            handlerBody.push(convertBlockToAstNode(block));
+                            // statements는 재귀적으로 처리될 수 있도록 구조를 유지합니다. (objectId 추가)
+                            handlerBody.push(convertBlockToAstNode(block, objectId));
                         }
                     }
                 }
@@ -104,8 +104,8 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                     // 시작 블록의 파라미터(예: 메시지 ID)를 arguments 속성으로 복사합니다.
                     // convertBlockToAstNode를 사용하여 파라미터 내부의 블록도 재귀적으로 변환합니다.
                     arguments: (firstBlock.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
-                        (typeof param === 'object' && param !== null && param.type)
-                            ? convertBlockToAstNode(param)
+                        (typeof param === 'object' && param !== null && param.type) // (objectId 추가)
+                            ? convertBlockToAstNode(param, objectId)
                             : param
                     ),
                     handlerBody: handlerBody,
@@ -145,7 +145,7 @@ function buildAstFromScript(entryScript, functionId = undefined) {
                     const statements = firstBlock.statements?.[0] || [];
                     for (const block of statements) {
                         if (block && typeof block.type === 'string') {
-                            funcBody.push(convertBlockToAstNode(block));
+                            funcBody.push(convertBlockToAstNode(block, objectId));
                         }
                     }
 
@@ -192,7 +192,7 @@ function findLocalVariables(body) {
  * @param {object} block - 단일 엔트리 블록 객체
  * @returns {object} - 변환된 AST 노드
  */
-function convertBlockToAstNode(block) {
+function convertBlockToAstNode(block, objectId) {
     let funcId = undefined;
     // 함수 호출 블록(예: 'func_epqt')에서 funcId를 추출합니다.
     if (block.type.startsWith('func_')) {
@@ -213,12 +213,13 @@ function convertBlockToAstNode(block) {
         // 함수 파라미터 블록의 경우, arguments[0]에 ID가 들어있습니다.
         // 이를 paramId로 추출하여 AST 노드에 명시적으로 추가합니다.
         ...(paramId ? { paramId: paramId } : {}),
+        objectId: objectId, // 오브젝트 ID를 노드에 추가
         type: block.type, // 블록 타입 그대로 사용
         // params 배열을 순회하며, 각 파라미터가 블록(객체이며 type 속성을 가짐)이면
         // 재귀적으로 변환하고, 리터럴 값이면 그대로 사용합니다.
         arguments: (block.params || []).filter(p => p !== null && typeof p !== 'undefined').map(param =>
             (typeof param === 'object' && param !== null && param.type)
-                ? convertBlockToAstNode(param)
+                ? convertBlockToAstNode(param, objectId)
                 : param
         ),
         statements: [] // 기본적으로 비어있는 배열로 초기화
@@ -238,14 +239,14 @@ function convertBlockToAstNode(block) {
                 const nestedStatements = [];
                 for (const nestedBlock of stmtBlock) {
                     if (nestedBlock && typeof nestedBlock.type === 'string') {
-                        nestedStatements.push(convertBlockToAstNode(nestedBlock));
+                        nestedStatements.push(convertBlockToAstNode(nestedBlock, objectId));
                     }
                 }
                 // 중첩된 statement를 위한 별도 AST 노드 타입이 필요할 수 있습니다.
                 // 여기서는 임시로 Array로 감싸서 처리합니다.
                 astNode.statements.push(nestedStatements);
             } else if (stmtBlock && typeof stmtBlock.type === 'string') {
-                astNode.statements.push(convertBlockToAstNode(stmtBlock));
+                astNode.statements.push(convertBlockToAstNode(stmtBlock, objectId));
             }
         }
     }
@@ -257,7 +258,7 @@ function convertBlockToAstNode(block) {
  * @param {object} ast - buildAstFromScript로 생성된 AST
  * @returns {string} - 변환된 JavaScript 코드
  */
-function codeGen(ast) {
+function codeGen(ast, objectId) {
     // TODO: AST를 순회하며 실제 JavaScript 코드를 생성하는 로직 구현
     let generatedCode = '';
 
@@ -279,7 +280,7 @@ function codeGen(ast) {
 `;
                 }
                 node.body.forEach(blockNode => {
-                    generatedCode += generateStatement(blockNode, 4);
+                    generatedCode += generateStatement(blockNode, 4, { objectId });
                 });
                 generatedCode += `};
 
@@ -292,7 +293,7 @@ function codeGen(ast) {
             if (node.type === "EventHandler") {
                 const config = eventHandlerConfig[node.eventName];
                 if (config) {
-                    generatedCode += generateEventHandler(node, config);
+                    generatedCode += generateEventHandler(node, config, objectId);
                 } else {
                     generatedCode += `// TODO: '${node.eventName}' 이벤트 핸들러 구현
 
@@ -328,8 +329,7 @@ const eventHandlerConfig = {
     "clone_start": { event: 'clone_start' },
     "some_key_pressed": { event: 'key_pressed', param: 'key' },
 };
-
-function generateEventHandler(node, config) {
+function generateEventHandler(node, config, objectId) {
     let code = '';
     const param = config.param || '';
     let condition = config.condition;
@@ -352,7 +352,7 @@ function generateEventHandler(node, config) {
 
     const bodyIndent = currentIndent + (config.indent || 0);
     node.handlerBody.forEach(blockNode => {
-        code += generateStatement(blockNode, bodyIndent);
+        code += generateStatement(blockNode, bodyIndent, { objectId });
     });
 
     if (condition) {
@@ -1185,12 +1185,12 @@ function generateExpression(arg) {
 
             // 미구현 표현식의 경우 null을 반환하여 호출자가 처리하도록 합니다.
             // 이렇게 하면 'if (/* ... */)'와 같은 잘못된 구문이 생성되는 것을 방지합니다.
-            console.warn(`Unimplemented expression block type: ${arg.type}`);
+            console.warn(`Unimplemented expression block type: ${arg.type} objectID: ${arg.objectId}`);
             return { error: true, type: arg.type };
     }
 }
-function test_ast(entryScript, functionId) {
-    const ast = buildAstFromScript(entryScript, functionId);
+function test_ast(entryScript, functionId, objectId) {
+    const ast = buildAstFromScript(entryScript, functionId, objectId);
     return ast;
 }
 
