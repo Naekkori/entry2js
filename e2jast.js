@@ -186,6 +186,33 @@ function findLocalVariables(body) {
     traverse(body);
     return Array.from(localVars);
 }
+
+/**
+ * AST 노드 트리에서 마지막으로 값이 할당된 지역 변수의 이름을 찾습니다.
+ * @param {object} node - 검사를 시작할 AST 노드
+ * @returns {string|null} 마지막으로 할당된 변수 이름 (toJsId 형식) 또는 null
+ */
+function findLastAssignedVariable(node) {
+    if (!node) return null;
+
+    // 제어문(if, if_else, repeat 등)의 경우, 내부 statements를 재귀적으로 탐색합니다.
+    if (node.statements && node.statements.length > 0) {
+        // 제어문은 여러 개의 statement 배열을 가질 수 있습니다 (if/else). 뒤에서부터 탐색합니다.
+        for (let i = node.statements.length - 1; i >= 0; i--) {
+            const innerStatements = node.statements[i];
+            if (innerStatements && innerStatements.length > 0) {
+                const result = findLastAssignedVariable(innerStatements[innerStatements.length - 1]);
+                if (result) return result;
+            }
+        }
+    }
+
+    if (node.type === 'set_func_variable' && node.arguments && node.arguments[0]) {
+        return toJsId(node.arguments[0]);
+    }
+
+    return null;
+}
 /**
  * 단일 엔트리 블록 객체를 해당 AST 노드로 변환합니다.
  * 이 함수는 재귀적으로 `statements` 배열을 처리할 수 있습니다.
@@ -279,9 +306,33 @@ function codeGen(ast, objectId) {
                     generatedCode += `    let ${node.localVariables.join(', ')};
 `;
                 }
+
+                let functionBodyCode = '';
                 node.body.forEach(blockNode => {
-                    generatedCode += generateStatement(blockNode, 4, { objectId });
+                    functionBodyCode += generateStatement(blockNode, 4, { objectId });
                 });
+
+                generatedCode += functionBodyCode;
+
+                // 값 반환 함수이고, 생성된 본문에 return 문이 없는 경우 암시적 반환을 처리합니다.
+                if (node.is_value_returning && !functionBodyCode.includes('return ')) {
+                    const lastNode = node.body.length > 0 ? node.body[node.body.length - 1] : null;
+                    if (lastNode) {
+                        const isLastNodeStatement = !!statementGenerators[lastNode.type];
+
+                        if (isLastNodeStatement) {
+                            // 마지막 노드가 구문(if, if_else 등)이면, 그 안에서 마지막으로 할당된 변수를 찾아서 반환합니다.
+                            const varToReturn = findLastAssignedVariable(lastNode);
+                            if (varToReturn) {
+                                generatedCode += `    return ${varToReturn};\n`;
+                            }
+                        } else {
+                            // 마지막 노드가 표현식이면, 그 표현식의 결과를 반환합니다.
+                            generatedCode += `    return ${generateExpression(lastNode, { objectId })};\n`;
+                        }
+                    }
+                }
+
                 generatedCode += `};
 
 `;
@@ -653,9 +704,7 @@ const statementGenerators = {
         const varName = toJsId(node.arguments[0]); // ID는 리터럴이므로 직접 가져옵니다.
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     }),
-    'set_return_value': createSafeStatementGenerator([0], (node, indent, context, [value]) =>{
-        `${' '.repeat(indent)}return ${value};\n`
-    }),
+    'set_return_value': createSafeStatementGenerator([0], (node, indent, context, [value]) => `${' '.repeat(indent)}return ${value};\n`),
     'wait_until_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) =>
         `${' '.repeat(indent)}await Entry.waitUntilTrue(() => ${condition});\n`
     ),
