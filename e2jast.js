@@ -969,8 +969,8 @@ function generateExpression(arg, context = {}) {
         }
         case 'calc_operation': {
             const left = generateExpression(arg.arguments[0], context);
-            const op = mapOperator(arg.arguments[1]);
-            return `Entry.calcOperation(${left},${op})`;
+            const op = JSON.stringify(arg.arguments[1]); // 'floor' 같은 연산자를 문자열로 처리
+            return `Entry.calcOperation(${left}, ${op})`;
         }
         case 'length_of_string': {
             const string = generateExpression(arg.arguments[0], context);
@@ -1157,10 +1157,11 @@ function generateExpression(arg, context = {}) {
             return `Entry.getMouseCoords().${arg.arguments[0]}`;
         }
         case 'quotient_and_mod': {
+            //엔트리는 문자열로 매핑된 Argments 를 사용해서 자리가 바뀌는 경우 있는듯 하다.
             const left = generateExpression(arg.arguments[0], context);
-            const op = generateExpression(arg.arguments[1], context);
-            const right = generateExpression(arg.arguments[2], context);
-            return `Entry.quotientAndmod(${left},${op},${right})`;
+            const op = generateExpression(arg.arguments[2], context); // "QUOTIENT" 또는 "MOD"
+            const right = generateExpression(arg.arguments[1], context);
+            return `Entry.quotientAndmod(${left}, ${op}, ${right})`;
         }
         case 'get_project_timer_value': {
             return `Entry.getTimerValue()`;
