@@ -705,9 +705,11 @@ const statementGenerators = {
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     }),
     'set_return_value': createSafeStatementGenerator([0], (node, indent, context, [value]) => `${' '.repeat(indent)}return ${value};\n`),
-    'wait_until_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) =>
-        `${' '.repeat(indent)}await Entry.waitUntilTrue(() => ${condition});\n`
-    ),
+    'wait_until_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) => {
+        // 조건식에 'await'가 포함되어 있으면 async 함수로 감싸야 합니다.
+        const asyncPrefix = condition.includes('await') ? 'async ' : '';
+        return `${' '.repeat(indent)}await Entry.waitUntilTrue(${asyncPrefix}() => ${condition});\n`;
+    }),
     'function_general': (node, indent, context) => {
         const funcName = `func_${node.funcId}`;
         const args = node.arguments.map(arg => generateExpression(arg, context)).join(', ');
@@ -1141,14 +1143,7 @@ function generateExpression(arg, context = {}) {
             const op = mapOperator(arg.arguments[1]);
             const rightExpr = generateExpression(arg.arguments[2], context);
 
-            // 표현식에 await가 포함되어 있는지 확인
-            if (leftExpr.includes('await') || rightExpr.includes('await')) {
-                // await가 포함된 경우, async 즉시 실행 함수로 감싸서 Promise를 반환하도록 합니다.
-                return `(async () => { return ${leftExpr} ${op} ${rightExpr} })()`;
-            } else {
-                // await가 없으면 기존 방식대로 괄호로만 감쌉니다.
-                return `(${leftExpr} ${op} ${rightExpr})`;
-            }
+            return `(${leftExpr} ${op} ${rightExpr})`;
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
@@ -1190,8 +1185,12 @@ function generateExpression(arg, context = {}) {
             return toJsId(arg.arguments[0]);
         }
         case 'function_value': {
+            // 함수 호출 표현식 생성
             const funcName = `func_${arg.funcId}`;
             const args = arg.arguments.map(a => generateExpression(a, context)).join(', ');
+            // 함수 호출 자체가 await를 필요로 하므로, await 키워드를 붙여줍니다.
+            // 이 표현식을 사용하는 상위 구문(예: if, while)은 이 await를 처리할 수 있어야 합니다.
+            // (예: if (await someAsyncFunc()) { ... })
             return `await Entry.lambda.${funcName}(${args})`;
         }
         case 'calc_rand': {
