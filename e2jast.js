@@ -653,6 +653,9 @@ const statementGenerators = {
         const varName = toJsId(node.arguments[0]); // ID는 리터럴이므로 직접 가져옵니다.
         return `${' '.repeat(indent)}${varName} = ${value};\n`;
     }),
+    'set_return_value': createSafeStatementGenerator([0], (node, indent, context, [value]) =>{
+        `${' '.repeat(indent)}return ${value};\n`
+    }),
     'wait_until_true': createSafeStatementGenerator([0], (node, indent, context, [condition]) =>
         `${' '.repeat(indent)}await Entry.waitUntilTrue(() => ${condition});\n`
     ),
