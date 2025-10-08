@@ -291,7 +291,7 @@ function codeGen(ast, objectId) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER + '\n';
-    generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`;
+    //generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`; 이코드는 엔진에서 자동으로 할당합니다.
 
     // 함수를 먼저 정의합니다.
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
