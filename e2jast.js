@@ -764,7 +764,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.strechScaleSize(${dimension}, ${size});\n`
     ),
     'reset_scale_size': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.resetSize();\n`;
+        return `${' '.repeat(indent)}Entry.resetScale();\n`;
     },
     'change_object_index': createSafeStatementGenerator([0], (node, indent, context, [index]) =>
         `${' '.repeat(indent)}Entry.changeObjectIndex(${index});\n`
@@ -788,7 +788,7 @@ const statementGenerators = {
         return `${' '.repeat(indent)}Entry.getSoundSpeed();\n`;
     },
     'sound_silent_all': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.stopAllSounds();\n`;
+        return `${' '.repeat(indent)}Entry.soundSilentAll();\n`;
     },
     'play_bgm': createSafeStatementGenerator([0], (node, indent, context, [soundID]) =>
         `${' '.repeat(indent)}Entry.playBgm(${soundID});\n`
