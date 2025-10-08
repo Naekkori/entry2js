@@ -777,10 +777,10 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.changeVolume(${volume});\n`
     ),
     'sound_speed_change': createSafeStatementGenerator([0], (node, indent, context, [speed]) =>
-        `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`
+        `${' '.repeat(indent)}Entry.changeSoundSpeed(${speed});\n`
     ),
     'sound_speed_set': createSafeStatementGenerator([0], (node, indent, context, [speed]) =>
-        `${' '.repeat(indent)}Entry.changeSpeed(${speed});\n`
+        `${' '.repeat(indent)}Entry.setSoundSpeed(${speed});\n`
     ),
     'get_sound_volume': (node, indent, context)=>{
         return `${' '.repeat(indent)}Entry.getVolume();\n`;
