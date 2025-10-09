@@ -82,7 +82,7 @@ const Transpiler = async (Jsonpath, onProgress) => {
     const projectJson = JSON.parse(fs.readFileSync(Jsonpath, 'utf8'));
 
     if (Array.isArray(projectJson.objects)) {
-        const objectsToProcess = projectJson.objects.filter(obj => obj && obj.script && obj.script.length > 0);
+        const objectsToProcess = projectJson.objects.filter(obj => obj && obj.script && obj.script.length != 0);
         if (objectsToProcess.length > 0 && onProgress) {
             onProgress(`총 ${objectsToProcess.length}개의 오브젝트를 병렬로 변환합니다.`);
         }
