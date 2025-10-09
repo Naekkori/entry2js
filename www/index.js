@@ -4,7 +4,8 @@
 */
 const home = `
 <header style="align-items: center; display: flex; justify-content: center;">
-    <h1>Entry2JS</h1>
+    <img src="E2JS.svg" width="100px">
+    <h1 style="color:black; m;">Entry2JS</h1>
 </header>
 <span>엔트리프로젝트 를 FastEntry 자바스크립트 로 트랜스파일 하는 도구입니다.</span>
 <br>
