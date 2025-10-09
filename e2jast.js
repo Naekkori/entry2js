@@ -900,7 +900,20 @@ function generateStatement(node, indent = 0, context = {}) {
  * @param {object|string|number} arg - 변환할 인자 (AST 노드 또는 리터럴)
  * @returns {string} 생성된 JavaScript 표현식
  */
-function generateExpression(arg, context = {}) {
+function getOperatorPrecedence(op) {
+    const precedence = {
+        '||': 1,
+        '&&': 2,
+        '===': 6, '!==': 6,
+        '<': 7, '<=': 7, '>': 7, '>=': 7,
+        '+': 9, '-': 9,
+        '*': 10, '/': 10, '%': 10,
+        '!': 15, // Unary not
+    };
+    return precedence[op] || 0;
+}
+
+function generateExpression(arg, context = {}, parentPrecedence = 0) {
     // 인자가 블록(객체)이 아닌 리터럴 값일 경우
     if (typeof arg !== 'object' || arg === null) {
         // 값의 타입에 따라 처리: 문자열은 따옴표로 감싸고, 숫자는 그대로 둡니다.
@@ -959,10 +972,15 @@ function generateExpression(arg, context = {}) {
         case 'False': return 'false';
         // 계산 블록 처리
         case 'calc_basic': {
-            const left = generateExpression(arg.arguments[0], context);
             const op = mapOperator(arg.arguments[1]);
-            const right = generateExpression(arg.arguments[2], context);
-            return `(${left} ${op} ${right})`;
+            const currentPrecedence = getOperatorPrecedence(op);
+            const left = generateExpression(arg.arguments[0], context, currentPrecedence);
+            const right = generateExpression(arg.arguments[2], context, currentPrecedence + 1); // Left-associative
+            const expression = `${left} ${op} ${right}`;
+            if (currentPrecedence < parentPrecedence) {
+                return `(${expression})`;
+            }
+            return expression;
         }
         case 'distance_something': {
             const target = generateExpression(arg.arguments[0], context);
@@ -1083,18 +1101,25 @@ function generateExpression(arg, context = {}) {
             return `Entry.isType(${value},${type})`;
         }
         case 'boolean_and_or':{
-            const bop1 = generateExpression(arg.arguments[0], context);
-            const op = arg.arguments[1];
-            const bop2 = generateExpression(arg.arguments[2], context);
-            if (op==='AND') {
-                return `(${bop1} && ${bop2})`;
-            } else if (op==='OR') {
-                return `(${bop1} || ${bop2})`;
+            const op = mapOperator(arg.arguments[1]);
+            const currentPrecedence = getOperatorPrecedence(op);
+            const left = generateExpression(arg.arguments[0], context, currentPrecedence);
+            const right = generateExpression(arg.arguments[2], context, currentPrecedence + 1); // Left-associative
+            const expression = `${left} ${op} ${right}`;
+            if (currentPrecedence < parentPrecedence) {
+                return `(${expression})`;
             }
+            return expression;
         }
         case 'boolean_not':{
-            const bop = generateExpression(arg.arguments[0], context);
-            return `!${bop}`;
+            const op = '!';
+            const currentPrecedence = getOperatorPrecedence(op);
+            const operand = generateExpression(arg.arguments[0], context, currentPrecedence);
+            const expression = `!${operand}`;
+            if (currentPrecedence < parentPrecedence) {
+                return `(${expression})`;
+            }
+            return expression;
         }
         case 'is_touch_supported':{
             return 'Entry.isTouchSupported()';
@@ -1140,11 +1165,16 @@ function generateExpression(arg, context = {}) {
         }
         // 판단 블록의 조건 부분 처리
         case 'boolean_basic_operator': {
-            const leftExpr = generateExpression(arg.arguments[0], context);
             const op = mapOperator(arg.arguments[1]);
-            const rightExpr = generateExpression(arg.arguments[2], context);
-
-            return `(${leftExpr} ${op} ${rightExpr})`;
+            const currentPrecedence = getOperatorPrecedence(op);
+            // Comparison operators are non-associative.
+            const left = generateExpression(arg.arguments[0], context, currentPrecedence + 1);
+            const right = generateExpression(arg.arguments[2], context, currentPrecedence + 1);
+            const expression = `${left} ${op} ${right}`;
+            if (currentPrecedence < parentPrecedence) {
+                return `(${expression})`;
+            }
+            return expression;
         }
 
         // 좌표/크기 등 오브젝트의 속성값 블록 처리
