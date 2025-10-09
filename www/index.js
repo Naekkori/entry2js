@@ -9,6 +9,11 @@ const home = `
 </header>
 <span>엔트리프로젝트 를 FastEntry 자바스크립트 로 트랜스파일 하는 도구입니다.</span>
 <br>
+<div>
+<span>스크립트 만 변환하기</span>
+<input type="checkbox" id="script_only" onclick="setScriptOnly(this)">
+</div>
+<br>
 <button id="open">
     <span>열기</span>
 </button>
@@ -25,7 +30,7 @@ const processingPage = `
 `;
 
 const appContainer = document.getElementById("app");
-
+var IsScriptOnly = false;
 // 로그를 화면에 출력하는 함수
 const addLog = (message) => {
     const logContainer = document.getElementById('log-container');
@@ -39,6 +44,15 @@ function closeSettings() {
 }
 function openSettings() {
     document.getElementById('setting_container').classList.add('show');
+}
+function setScriptOnly(p) {
+    if (p.checked) {
+        IsScriptOnly = true;
+        localStorage.setItem("ScriptOnly", true);
+    } else {
+        IsScriptOnly = false;
+        localStorage.setItem("ScriptOnly", false);
+    }
 }
 function EnableCompile(checkboxElement) {
     console.log(`CompileEnabled: ${checkboxElement.checked}`);
@@ -83,7 +97,7 @@ window.onload = async function () {
     // 로컬스토리지 준비
     const byteCodePath = localStorage.getItem("BytecodePath");
     const byteCodeCompileStr = localStorage.getItem("ByteCodeCompile");
-
+    const setScriptOnlyStr = localStorage.getItem("ScriptOnly");
     if (byteCodePath !== null) {
         document.getElementById("bytecode_compile_path").value = byteCodePath;
     } else {
@@ -96,6 +110,13 @@ window.onload = async function () {
         EnableByteCodeCompiler(isCompileEnabled);
     } else {
         localStorage.setItem("ByteCodeCompile", false);
+    }
+
+    if (setScriptOnlyStr !== null) {
+        const isScriptOnly = (setScriptOnlyStr === 'true');
+        document.getElementById("script_only").checked = isScriptOnly
+    }else{
+        localStorage.setItem("ScriptOnly", false);
     }
 };
 async function getInfo() {
@@ -122,7 +143,7 @@ document.body.addEventListener("click", async (event) => {
         window.electronAPI.onProcessLog(addLog);
 
         // 변환 시작 요청
-        const result = await window.electronAPI.startConvert(filePath);
+        const result = await window.electronAPI.startConvert(filePath, IsScriptOnly);//스크립트 만 추가
 
         // 변환 완료 후 '처음으로' 버튼 표시
         document.getElementById('back-to-home').style.display = 'block';

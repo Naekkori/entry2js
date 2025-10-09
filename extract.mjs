@@ -8,7 +8,7 @@ import * as tar from 'tar';
  * ... (기존 주석)
  * @param {(message: string) => void} [onProgress] - 진행 상황을 보고하는 콜백 함수
  */
-const extractPlayEntryProject = async (entFilePath, outputDir, onProgress = () => {}) => {
+const extractPlayEntryProject = async (entFilePath, outputDir, onProgress = () => {}, IsScriptOnly = false) => {
   try {
     await fs.access(entFilePath);
   } catch {
@@ -23,12 +23,18 @@ const extractPlayEntryProject = async (entFilePath, outputDir, onProgress = () =
 
   try {
     onProgress(`압축 해제 시작: ${path.basename(entFilePath)}`);
-    await tar.extract({
+    const extractOptions = {
       file: entFilePath,
       cwd: outputDir,
       // 각 파일이 압축 해제될 때마다 onProgress 콜백을 호출합니다.
       onentry: (entry) => onProgress(`  > ${entry.path}`),
-    });
+    };
+
+    if (IsScriptOnly) {
+        await tar.extract(extractOptions, ['temp/project.json']);
+    } else {
+        await tar.extract(extractOptions);
+    }
     onProgress(`압축 해제 완료.`);
 
     const projectJsonPath = path.join(outputDir,"temp", 'project.json');

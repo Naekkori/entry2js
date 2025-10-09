@@ -6,6 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getProgramInfo: () => ipcRenderer.invoke('info:get'),
     setCompileFlag:(flag)=>ipcRenderer.invoke('flag:set',flag),
     getCompileFlag:()=>ipcRenderer.invoke('flag:get'),
-    startConvert: (FilePath) => ipcRenderer.invoke('conv:Start', FilePath),
+    startConvert: (FilePath, IsScriptOnly) => ipcRenderer.invoke('conv:Start', FilePath, IsScriptOnly),
     onProcessLog: (callback) => ipcRenderer.on('proc:log', (_event, value) => callback(value))
 });

@@ -47,7 +47,7 @@ ipcMain.handle('info:get', async () => {
     }
     return packageInfo;
 });
-ipcMain.handle('conv:Start', async (event, filePath) => {
+ipcMain.handle('conv:Start', async (event, filePath, IsScriptOnly) => {
     if (!filePath) {
         return { success: false, message: '파일 경로가 없습니다.' };
     }
@@ -66,7 +66,7 @@ ipcMain.handle('conv:Start', async (event, filePath) => {
         onProgress('변환 프로세스를 시작합니다...');
         const { extractPlayEntryProject } = await import("./extract.mjs");
         // extract 함수에 onProgress 콜백을 전달합니다.
-        await extractPlayEntryProject(filePath, outputDir, onProgress);
+        await extractPlayEntryProject(filePath, outputDir, onProgress, IsScriptOnly);
 
         onProgress('압축 해제 완료. 후속 작업을 진행합니다...');
         const { default: Transpiler } = await import("./transpiler.mjs");
