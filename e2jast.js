@@ -593,12 +593,6 @@ const statementGenerators = {
     'clear_effects': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.clearEffects();\n`;
     },
-    'change_size': createSafeStatementGenerator([0], (node, indent, context, [size]) =>
-        `${' '.repeat(indent)}Entry.changeSize(${size});\n`
-    ),
-    'set_size': createSafeStatementGenerator([0], (node, indent, context, [set_size_amount]) =>
-        `${' '.repeat(indent)}Entry.setSize(${set_size_amount});\n`
-    ),
     // 왜 그렇게 짰는지 모르겠지만 서로 반대로 작동하도록 설계된듯.
     'flip_x': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.flipY();\n`;
