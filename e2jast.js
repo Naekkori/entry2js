@@ -873,6 +873,10 @@ const statementGenerators = {
     'set_value_from_cell': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [cellID, columnName, value]) =>
         `${' '.repeat(indent)}Entry.CRUD.setValuefromCell(${cellID}, ${columnName}, ${value});\n`
     ),
+    // 붓 블럭
+    'brush_stamp':createSafeStatementGenerator([0], (node, indent, context, [stamp]) =>
+        `${' '.repeat(indent)}Entry.brushStamp(${stamp});\n`
+    ),
 };
 
 function generateStatement(node, indent = 0, context = {}) {
