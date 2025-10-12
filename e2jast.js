@@ -874,9 +874,21 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.CRUD.setValuefromCell(${cellID}, ${columnName}, ${value});\n`
     ),
     // 붓 블럭
-    'brush_stamp':createSafeStatementGenerator([0], (node, indent, context, [stamp]) =>
-        `${' '.repeat(indent)}Entry.brushStamp(${stamp});\n`
-    ),
+    'brush_stamp':(node, indent, context) =>{
+        return `${' '.repeat(indent)}Entry.brushStamp();\n`
+    },
+    'start_drawing':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.startDrawing();\n`;
+    },
+    'stop_drawing':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.stopDrawing();\n`;
+    },
+    'start_fill':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.startFill();\n`;
+    },
+    'end_fill':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.endFill();\n`;
+    }
 };
 
 function generateStatement(node, indent = 0, context = {}) {
