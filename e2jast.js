@@ -593,7 +593,7 @@ const statementGenerators = {
     'change_effect_amount': createSafeStatementGenerator([0, 1], (node, indent, context, [effect, amount]) =>
         `${' '.repeat(indent)}Entry.changeEffectAmount(${effect}, ${amount});\n`
     ),
-    'clear_effects': (node, indent, context) => {
+    'erase_all_effects':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.clearEffects();\n`;
     },
     // 왜 그렇게 짰는지 모르겠지만 서로 반대로 작동하도록 설계된듯.
@@ -660,8 +660,7 @@ const statementGenerators = {
         statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
-
-        code += `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
+        let code=`${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
 
         if (!hasAwait) {
