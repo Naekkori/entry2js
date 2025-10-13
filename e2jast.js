@@ -904,6 +904,9 @@ const statementGenerators = {
     'change_thickness': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.changeBrushThickness(${node.arguments[0]});\n`;
     },
+    'set_thickness': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.setBrushThickness(${node.arguments[0]});\n`;
+    }
 };
 
 function generateStatement(node, indent = 0, context = {}) {
