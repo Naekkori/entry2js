@@ -942,10 +942,23 @@ function getOperatorPrecedence(op) {
 function generateExpression(arg, context = {}, parentPrecedence = 0) {
     // 인자가 블록(객체)이 아닌 리터럴 값일 경우
     if (typeof arg !== 'object' || arg === null) {
-        // 값의 타입에 따라 처리: 문자열은 따옴표로 감싸고, 숫자는 그대로 둡니다.
+        // 값의 타입에 따라 처리
         if (typeof arg === 'string') {
-            return JSON.stringify(arg);
+            const s = arg;
+            // 진법 리터럴 및 숫자 패턴을 확인하여 숫자처럼 보이면 숫자 리터럴로 취급합니다.
+            const isRadixLiteral =
+                /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
+                /^[-+]?0[oO][0-7]+$/.test(s) ||
+                /^[-+]?0[bB][01]+$/.test(s);
+            const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+
+            if (s.trim() !== '' && (isRadixLiteral || isNumericString)) {
+                return s.trim();
+            }
+            // 숫자 형태가 아니면 안전하게 문자열 리터럴로 처리합니다.
+            return JSON.stringify(s);
         }
+        // 문자열이 아닌 리터럴(주로 숫자)은 그대로 문자열로 변환하여 반환합니다.
         return String(arg);
     }
 
@@ -965,12 +978,8 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
 
             if (s.trim() !== '' && (isRadixLiteral || isNumericString)) {
-                if (isRadixLiteral) {
-                    return s;
-                }
-                return s.trim(); // 숫자 문자열은 그대로 반환
+                return s.trim(); // 숫자처럼 보이면 숫자 리터럴로 변환
             }
-
             return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
         }
         case 'number': {
@@ -979,19 +988,20 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             if (raw === null || typeof raw === 'undefined' || String(raw).trim() === '') {
                 return '0';
             }
-            const s = String(raw);
+            const s = String(raw).trim();
 
             // 'text' 블록과 동일한 숫자 판별 로직을 적용합니다.
             const isRadixLiteral =
                 /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
                 /^[-+]?0[oO][0-7]+$/.test(s) ||
                 /^[-+]?0[bB][01]+$/.test(s);
-            const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+            const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s);
 
             if (isRadixLiteral || isNumericString) {
-                return s.trim(); // 명확한 숫자 형식이면 그대로 반환합니다.
+                return s; // 명확한 숫자 형식이면 그대로 반환합니다.
             }
-            return JSON.stringify(s); // 숫자 형식이 아니면 안전하게 문자열로 처리합니다.
+            // 엔트리에서는 숫자 블록에 숫자가 아닌 값이 들어가면 0으로 처리됩니다.
+            return 0; // 숫자 형식이 아니면 0으로 처리합니다.
         }
         // 엔트리의 '참/거짓' 블록은 True/False 타입을 가집니다.
         case 'True': return 'true';
