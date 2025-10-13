@@ -904,7 +904,13 @@ const statementGenerators = {
     },
     'set_thickness': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.setBrushThickness(${node.arguments[0]});\n`;
-    }
+    },
+    'change_brush_transparency':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.changeBrushTransparency(${node.arguments[0]});\n`;
+    },
+    'set_brush_tranparency':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.setBrushTransparency(${node.arguments[0]});\n`;
+    },
 };
 
 function generateStatement(node, indent = 0, context = {}) {
