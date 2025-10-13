@@ -117,7 +117,7 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                     // 스크립트 내의 ID는 'l0uw'와 같은 형태일 수 있습니다.
                     const funcId = functionId || firstBlock.id;
                     const params = [];
-                    
+
                     // 함수 정의 블록의 파라미터를 재귀적으로 탐색하는 함수
                     function findParamsRecursive(paramArray) {
                         if (!paramArray || !Array.isArray(paramArray)) return;
@@ -291,6 +291,9 @@ function codeGen(ast, objectId) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER + '\n';
+    if (objectId) {
+        generatedCode += `let fe_b_thic_${toJsId(objectId).substring(4)} = 0.1;\n`;
+    }
     //generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`; 이코드는 엔진에서 자동으로 할당합니다.
 
     // 함수를 먼저 정의합니다.
@@ -501,7 +504,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.moveDirection(${distance});\n`
     ),
     'message_cast': createSafeStatementGenerator([0], (node, indent, context, [messageIdExpr]) =>
-         `${' '.repeat(indent)}Entry.messageCast(${messageIdExpr});\n`
+        `${' '.repeat(indent)}Entry.messageCast(${messageIdExpr});\n`
     ),
     'move_x': createSafeStatementGenerator([0], (node, indent, context, [x]) =>
         `${' '.repeat(indent)}Entry.setX(Entry.getX() + ${x});\n`
@@ -518,10 +521,10 @@ const statementGenerators = {
     'locate_xy': createSafeStatementGenerator([0, 1], (node, indent, context, [x, y]) =>
         `${' '.repeat(indent)}Entry.locateXY(${x}, ${y});\n`
     ),
-    'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
+    'move_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time, x, y]) =>
         `${' '.repeat(indent)}await Entry.moveXYtime(Entry.getX() + ${x}, Entry.getY() + ${y}, ${time});\n`
     ),
-    'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time,x,y]) =>
+    'locate_xy_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [time, x, y]) =>
         `${' '.repeat(indent)}await Entry.moveXYtime(${x}, ${y}, ${time});\n`
     ),
     'rotate_relative': createSafeStatementGenerator([0], (node, indent, context, [angle]) =>
@@ -578,7 +581,7 @@ const statementGenerators = {
     'dialog': createSafeStatementGenerator([0, 1], (node, indent, context, [message, option]) =>
         `${' '.repeat(indent)}Entry.dialog(${message}, ${option});\n`
     ),
-    'dialog_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message,time, option]) =>
+    'dialog_time': createSafeStatementGenerator([0, 1, 2], (node, indent, context, [message, time, option]) =>
         `${' '.repeat(indent)}Entry.dialog(${message}, ${option}, ${time});\n`
     ),
     'remove_dialog': (node, indent, context) => {
@@ -755,7 +758,7 @@ const statementGenerators = {
     'set_scale_size': createSafeStatementGenerator([0], (node, indent, context, [size]) =>
         `${' '.repeat(indent)}Entry.setSize(${size});\n`
     ),
-    'stretch_scale_size': createSafeStatementGenerator([0, 1], (node, indent, context, [dimension,size]) =>
+    'stretch_scale_size': createSafeStatementGenerator([0, 1], (node, indent, context, [dimension, size]) =>
         `${' '.repeat(indent)}Entry.strechScaleSize(${dimension}, ${size});\n`
     ),
     'reset_scale_size': (node, indent, context) => {
@@ -776,10 +779,10 @@ const statementGenerators = {
     'sound_speed_set': createSafeStatementGenerator([0], (node, indent, context, [speed]) =>
         `${' '.repeat(indent)}Entry.setSoundSpeed(${speed});\n`
     ),
-    'get_sound_volume': (node, indent, context)=>{
+    'get_sound_volume': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.getVolume();\n`;
     },
-    'get_sound_speed':(node, indent, context)=>{
+    'get_sound_speed': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.getSoundSpeed();\n`;
     },
     'sound_silent_all': (node, indent, context) => {
@@ -824,13 +827,13 @@ const statementGenerators = {
     'wait_second': createSafeStatementGenerator([0], (node, indent, context, [second]) =>
         `${' '.repeat(indent)}await Entry.waitSeconds(${second});\n`
     ),
-    'continue_repeat':(node,indent,context)=>{
+    'continue_repeat': (node, indent, context) => {
         return `${' '.repeat(indent)}continue;\n`;
     },
-    'restart_project':(node,indent,context)=>{
+    'restart_project': (node, indent, context) => {
         return `${' '.repeat(indent)}restartProject();\n`;
     },
-    'remove_all_clones':(node,indent,context)=>{
+    'remove_all_clones': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.removeAllClones();\n`;
     },
     'text_write': createSafeStatementGenerator([0], (node, indent, context, [text]) =>
@@ -854,7 +857,7 @@ const statementGenerators = {
     'text_change_bg_color': createSafeStatementGenerator([0], (node, indent, context, [color]) =>
         `${' '.repeat(indent)}Entry.textChangeFontBGColor(${color});\n`
     ),
-    'text_flush':(node,indent,context)=>{
+    'text_flush': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.textFlush();\n`;
     },
     //데이터 테이블 (추가)
@@ -874,21 +877,33 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.CRUD.setValuefromCell(${cellID}, ${columnName}, ${value});\n`
     ),
     // 붓 블럭
-    'brush_stamp':(node, indent, context) =>{
+    'brush_stamp': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.brushStamp();\n`
     },
-    'start_drawing':(node,indent,context)=>{
+    'start_drawing': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.startDrawing();\n`;
     },
-    'stop_drawing':(node,indent,context)=>{
+    'stop_drawing': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.stopDrawing();\n`;
     },
-    'start_fill':(node,indent,context)=>{
+    'start_fill': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.startFill();\n`;
     },
-    'end_fill':(node,indent,context)=>{
+    'stop_fill': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.endFill();\n`;
-    }
+    },
+    'set_color': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.setBrushColor(${node.arguments[0]});\n`;
+    },
+    'set_random_color': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.setRandomColor();\n`;
+    },
+    'set_fill_color': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.setFillcolor(${node.arguments[0]});`;
+    },
+    'change_thickness': (node, indent, context) => {
+        return `${' '.repeat(indent)}Entry.changeBrushThickness(${node.arguments[0]});\n`;
+    },
 };
 
 function generateStatement(node, indent = 0, context = {}) {
@@ -936,26 +951,26 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
     // 인자가 값을 반환하는 블록일 경우
     switch (arg.type) {
         case 'text': {
-          const raw = arg.arguments?.[0];
-          const s = String(raw);
-        
-          // 진법 리터럴(0x, 0o, 0b)은 원형 유지할지 여부를 정책으로 결정
-          const isRadixLiteral =
-            /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
-            /^[-+]?0[oO][0-7]+$/.test(s) ||
-            /^[-+]?0[bB][01]+$/.test(s);
-        
-          // 명확한 숫자 패턴(정수, 부동소수점, 과학적 표기법)에 맞는지 확인합니다.
-          const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+            const raw = arg.arguments?.[0];
+            const s = String(raw);
 
-          if (s.trim() !== '' && (isRadixLiteral || isNumericString)) {
-            if (isRadixLiteral) {
-              return s;
+            // 진법 리터럴(0x, 0o, 0b)은 원형 유지할지 여부를 정책으로 결정
+            const isRadixLiteral =
+                /^[-+]?0[xX][0-9a-fA-F]+$/.test(s) ||
+                /^[-+]?0[oO][0-7]+$/.test(s) ||
+                /^[-+]?0[bB][01]+$/.test(s);
+
+            // 명확한 숫자 패턴(정수, 부동소수점, 과학적 표기법)에 맞는지 확인합니다.
+            const isNumericString = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s.trim());
+
+            if (s.trim() !== '' && (isRadixLiteral || isNumericString)) {
+                if (isRadixLiteral) {
+                    return s;
+                }
+                return s.trim(); // 숫자 문자열은 그대로 반환
             }
-            return s.trim(); // 숫자 문자열은 그대로 반환
-          }
-        
-          return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
+
+            return JSON.stringify(s); // 숫자가 아니면 안전하게 문자열 리터럴로
         }
         case 'number': {
             const raw = arg.arguments?.[0];
@@ -1045,9 +1060,9 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             const string = generateExpression(arg.arguments[0], context);
             const caseType = generateExpression(arg.arguments[1], context);
             if (caseType === 'toUpperCase') {
-                    return `String(${string}).toUpperCase()`;
+                return `String(${string}).toUpperCase()`;
             } else if (caseType === 'toLowerCase') {
-                    return `String(${string}).toLowerCase()`;
+                return `String(${string}).toLowerCase()`;
             } else {
                 return `String(${string})`; // Fallback
             }
@@ -1080,11 +1095,11 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             const index = generateExpression(arg.arguments[1], context);
             return `Entry.variableContainer.valueOfIndexList(${listId},${index})`;
         }
-        case 'length_of_list':{
+        case 'length_of_list': {
             const listId = generateExpression(arg.arguments[0], context);
             return `Entry.variableContainer.lengthOfList(${listId})`;
         }
-        case 'is_included_in_list':{
+        case 'is_included_in_list': {
             const listId = generateExpression(arg.arguments[0], context);
             const value = generateExpression(arg.arguments[1], context);
             return `Entry.variableContainer.isIncludedInList(${listId},${value})`;
@@ -1093,24 +1108,24 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
         case 'is_clicked': {
             return 'Entry.isClicked()';
         }
-        case 'is_object_clicked':{
+        case 'is_object_clicked': {
             const objecId = generateExpression(arg.arguments[0], context);
             return `Entry.isObjectClicked(${objecId})`;
         }
-        case 'is_press_some_key':{
+        case 'is_press_some_key': {
             const keycode = generateExpression(arg.arguments[0], context);
             return `Entry.isPressSomeKey(${keycode})`;
         }
-        case 'reach_something':{
+        case 'reach_something': {
             const Something = generateExpression(arg.arguments[0], context);
             return `Entry.reachSomething(${Something})`;
         }
-        case 'is_type':{
+        case 'is_type': {
             const value = generateExpression(arg.arguments[0], context);
             const type = generateExpression(arg.arguments[1], context);
             return `Entry.isType(${value},${type})`;
         }
-        case 'boolean_and_or':{
+        case 'boolean_and_or': {
             const op = mapOperator(arg.arguments[1]);
             const currentPrecedence = getOperatorPrecedence(op);
             const left = generateExpression(arg.arguments[0], context, currentPrecedence);
@@ -1121,7 +1136,7 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             }
             return expression;
         }
-        case 'boolean_not':{
+        case 'boolean_not': {
             const op = '!';
             const currentPrecedence = getOperatorPrecedence(op);
             const operand = generateExpression(arg.arguments[0], context, currentPrecedence);
@@ -1131,35 +1146,35 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             }
             return expression;
         }
-        case 'is_touch_supported':{
+        case 'is_touch_supported': {
             return 'Entry.isTouchSupported()';
         }
-        case 'is_boost_mode':{
+        case 'is_boost_mode': {
             return 'Entry.isBoostMode()';
         }
-        case 'is_current_device_type':{
+        case 'is_current_device_type': {
             const deviceType = generateExpression(arg.arguments[0], context);
             return `Entry.isCurrentDeviceType(${deviceType})`;
         }
         // 리소스게터
-        case 'get_pictures':{
+        case 'get_pictures': {
             const picParam = generateExpression(arg.arguments[0], context);
             return picParam;
         }
-        case 'get_sounds':{
+        case 'get_sounds': {
             const soundParam = generateExpression(arg.arguments[0], context);
             return soundParam;
         }
-        case 'angle':{
+        case 'angle': {
             const angleParam = generateExpression(arg.arguments[0], context);
             return angleParam;
         }
-        case 'text_color':{
+        case 'text_color': {
             const colorParam = generateExpression(arg.arguments[0], context);
             return colorParam;
         }
         // 글상자
-        case 'text_read':{
+        case 'text_read': {
             return `Entry.textRead()`;
         }
         // 대답 가져오기
@@ -1261,35 +1276,35 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             const fieldIndex = arg.arguments[0];
             return String(fieldIndex); // 인덱스 자체를 반환하여 API에서 처리하도록 합니다.
         }
-        case 'get_value_from_table':{
+        case 'get_value_from_table': {
             const tableId = generateExpression(arg.arguments[0], context);
             const rowIndex = generateExpression(arg.arguments[1], context);
             const columnName = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.getValuefromTable(${tableId}, ${rowIndex}, ${columnName})`;
         }
-        case 'get_value_from_last_row':{
+        case 'get_value_from_last_row': {
             const tableId = generateExpression(arg.arguments[0], context);
             const columnName = generateExpression(arg.arguments[1], context);
             return `Entry.CRUD.getValuefromLastRow(${tableId}, ${columnName})`;
         }
-        case 'get_value_from_cell':{
+        case 'get_value_from_cell': {
             const cellId = generateExpression(arg.arguments[0], context);
             const columnName = generateExpression(arg.arguments[1], context);
             return `Entry.CRUD.getValuefromCell(${cellId}, ${columnName})`;
         }
-        case 'calc_values_from_table':{
+        case 'calc_values_from_table': {
             const tableId = generateExpression(arg.arguments[0], context);
             const calc = generateExpression(arg.arguments[1], context);
             const columnName = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.calcValuesfromTable(${tableId}, ${calc}, ${columnName})`;
         }
-        case 'get_coefficient':{
+        case 'get_coefficient': {
             const matrix = generateExpression(arg.arguments[0], context);
             const field1 = generateExpression(arg.arguments[1], context);
             const field2 = generateExpression(arg.arguments[2], context);
             return `Entry.CRUD.getCoefficient(${matrix}, ${field1}, ${field2})`;
         }
-        case 'get_value_v_lookup':{
+        case 'get_value_v_lookup': {
             const matrix = generateExpression(arg.arguments[0], context);
             const field = generateExpression(arg.arguments[1], context);
             const ReturnField = generateExpression(arg.arguments[2], context);
