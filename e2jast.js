@@ -661,7 +661,6 @@ const statementGenerators = {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
 
-        let code = `${' '.repeat(indent)}await Entry.iterCheck(${count});\n`;
         code += `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
 
