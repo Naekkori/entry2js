@@ -1195,7 +1195,7 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
         }
         //색상피커 (추가)
         case 'color':{
-            const PcolorParam = generateEventHandler(arg.arguments[0], context);
+            const PcolorParam = generateExpression(arg.arguments[0], context);
             return PcolorParam;
         }
         // 글상자
