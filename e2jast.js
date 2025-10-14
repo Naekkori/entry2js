@@ -640,11 +640,7 @@ const statementGenerators = {
 
         let code = `${' '.repeat(indent)}while(true) {\n`;
         code += bodyCode;
-
-        if (!hasAwait) {
-            code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`;
-        }
-
+        code += `${' '.repeat(indent + 4)}await Entry.deltaTimeDelay();\n`; //무한반복은 프레임동기화 없으면 프리징
         code += `${' '.repeat(indent)}}\n`;
         return code;
     },
