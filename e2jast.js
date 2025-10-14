@@ -911,6 +911,9 @@ const statementGenerators = {
     'set_brush_tranparency':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.setBrushTransparency(${node.arguments[0]});\n`;
     },
+    'brush_erase_all':(node,indent,context)=>{
+        return `${' '.repeat(indent)}Entry.eraseAllBrush();\n`;
+    },
 };
 
 function generateStatement(node, indent = 0, context = {}) {
