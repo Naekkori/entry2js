@@ -890,27 +890,27 @@ const statementGenerators = {
     'stop_fill': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.endFill();\n`;
     },
-    'set_color': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.setBrushColor(${node.arguments[0]});\n`;
-    },
+    'set_color': createSafeStatementGenerator([0], (node, indent, context, [color]) =>{
+        return `${' '.repeat(indent)}Entry.setBrushColor(${color});\n`;
+    }),
     'set_random_color': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.setRandomColor();\n`;
     },
-    'set_fill_color': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.setFillcolor(${node.arguments[0]});`;
-    },
-    'change_thickness': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.changeBrushThickness(${node.arguments[0]});\n`;
-    },
-    'set_thickness': (node, indent, context) => {
-        return `${' '.repeat(indent)}Entry.setBrushThickness(${node.arguments[0]});\n`;
-    },
-    'change_brush_transparency':(node,indent,context)=>{
-        return `${' '.repeat(indent)}Entry.changeBrushTransparency(${node.arguments[0]});\n`;
-    },
-    'set_brush_tranparency':(node,indent,context)=>{
-        return `${' '.repeat(indent)}Entry.setBrushTransparency(${node.arguments[0]});\n`;
-    },
+    'set_fill_color': createSafeStatementGenerator([0], (node, indent, context, [color]) => {
+        return `${' '.repeat(indent)}Entry.setFillcolor(${color});\n`;
+    }),
+    'change_thickness': createSafeStatementGenerator([0], (node, indent, context, [thickness]) => {
+        return `${' '.repeat(indent)}Entry.changeBrushThickness(${thickness});\n`;
+    }),
+    'set_thickness': createSafeStatementGenerator([0], (node, indent, context, [thickness]) => {
+        return `${' '.repeat(indent)}Entry.setBrushThickness(${thickness});\n`;
+    }),
+    'change_brush_transparency':createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
+        return `${' '.repeat(indent)}Entry.changeBrushTransparency(${transparency});\n`;
+    }),
+    'set_brush_tranparency':createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
+        return `${' '.repeat(indent)}Entry.setBrushTransparency(${transparency});\n`;
+    }),
     'brush_erase_all':(node,indent,context)=>{
         return `${' '.repeat(indent)}Entry.eraseAllBrush();\n`;
     },
@@ -1192,6 +1192,11 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
         case 'text_color': {
             const colorParam = generateExpression(arg.arguments[0], context);
             return colorParam;
+        }
+        //색상피커 (추가)
+        case 'color':{
+            const PcolorParam = generateEventHandler(arg.arguments[0], context);
+            return PcolorParam;
         }
         // 글상자
         case 'text_read': {
