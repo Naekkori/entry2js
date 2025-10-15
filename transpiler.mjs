@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function transpileInWorker(script, functionId, onProgress, timeout = 5000) {
+function transpileInWorker(script, workerOptions, onProgress, timeout = 5000) {
     if (transpileInWorker.state === undefined) {
         transpileInWorker.state = {
             started: 0,
@@ -23,7 +23,7 @@ function transpileInWorker(script, functionId, onProgress, timeout = 5000) {
         // 개발 및 패키징 환경 모두에서 동일하게 작동합니다.
         const workerPath = path.join(__dirname, 'transpiler-worker.mjs');
 
-        const worker = new Worker(workerPath, { workerData: { script, functionId } });
+        const worker = new Worker(workerPath, { workerData: { script, ...workerOptions } });
         worker.on('message', (result) => {
             switch (result.status) {
                 case 'progress':
@@ -92,7 +92,7 @@ const Transpiler = async (Jsonpath, onProgress) => {
             // C++ 엔진에서 사용할 상대 경로. 플랫폼 간 호환성을 위해 '/'를 사용합니다.
             const relativeScriptPath = path.join('script', scriptFileName).replace(/\\/g, '/');
 
-            return transpileInWorker(obj.script, undefined, onProgress, 5000)
+            return transpileInWorker(obj.script, { objectId: obj.id, projectFunctions: projectJson.functions }, onProgress, 5000)
                 .then(generatedCode => {
                     // 변환 성공 시, project.json의 오브젝트에 jscript 키와 경로를 추가합니다.
                     // 참고: C++ Engine.h 에서는 ObjectInfo.scriptPath 를 사용하므로, 필요시 'jscript'를 'scriptPath'로 변경해야 할 수 있습니다.
@@ -140,7 +140,7 @@ const Transpiler = async (Jsonpath, onProgress) => {
                 // C++ 엔진에서 사용할 상대 경로. 플랫폼 간 호환성을 위해 '/'를 사용합니다.
                 const relativeScriptPath = path.join('script', scriptFileName).replace(/\\/g, '/');
  
-                return transpileInWorker(func.content, func.id, onProgress, 5000)
+                return transpileInWorker(func.content, { functionId: func.id, projectFunctions: projectJson.functions }, onProgress, 5000)
                     .then(generatedCode => {
                         // 변환 성공 시, project.json의 함수 객체에 jscript 키와 경로를 추가합니다.
                         func.jscript = relativeScriptPath;

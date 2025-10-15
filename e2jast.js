@@ -42,12 +42,21 @@ function getParamName(paramBlock) {
  * @param {string} entryScript - 파싱할 스크립트 JSON 문자열
  * @returns {object} - 생성된 AST (최상위 Program 노드)
  */
-function buildAstFromScript(entryScript, functionId = undefined, objectId = undefined) {
+function buildAstFromScript(entryScript, functionId = undefined, objectId = undefined, projectFunctions = []) {
     // 최상위 Program 노드를 생성합니다.
     const programAst = {
         type: "Program",
         body: [] // 프로그램 본문, 이벤트 핸들러 및 기타 최상위 구문 포함
     };
+
+    const functionNameMap = new Map();
+    if (Array.isArray(projectFunctions)) {
+        projectFunctions.forEach(func => {
+            if (func.id && func.name) {
+                functionNameMap.set(func.id, func.name);
+            }
+        });
+    }
 
     if (!entryScript) {
         return programAst;
@@ -153,6 +162,7 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                     programAst.body.push({
                         type: "FunctionDefinition",
                         id: funcId,
+                        displayName: functionNameMap.get(funcId) || `func_${funcId}`, // 사용자 정의 이름 추가
                         is_value_returning: firstBlock.type === 'function_create_value',
                         params: params,
                         body: funcBody,
@@ -285,7 +295,7 @@ function convertBlockToAstNode(block, objectId) {
  * @param {object} ast - buildAstFromScript로 생성된 AST
  * @returns {string} - 변환된 JavaScript 코드
  */
-function codeGen(ast, objectId) {
+function codeGen(ast, objectId, projectFunctions) {
     // TODO: AST를 순회하며 실제 JavaScript 코드를 생성하는 로직 구현
     let generatedCode = '';
 
@@ -301,7 +311,9 @@ function codeGen(ast, objectId) {
         ast.body.forEach(node => {
             if (node.type === "FunctionDefinition") {
                 const funcName = `func_${node.id}`;
+                const funcRealName = node.displayName;
                 const params = node.params.join(', ');
+                generatedCode += `// this funtion ${funcRealName}`;
                 generatedCode += `Entry.lambda.${funcName} = async function(${params}) {
 `;
                 // 로컬 변수 선언
@@ -1353,7 +1365,7 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             return { error: true, type: arg.type };
     }
 }
-function test_ast(entryScript, functionId, objectId) {
+function test_ast(entryScript, functionId, objectId, projectFunctions) {
     const ast = buildAstFromScript(entryScript, functionId, objectId);
     return ast;
 }
