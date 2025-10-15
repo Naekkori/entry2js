@@ -294,7 +294,7 @@ function codeGen(ast, objectId) {
     if (objectId) {
         generatedCode += `let fe_b_thic_${toJsId(objectId).substring(4)} = 0.1;\n`;
     }
-    //generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`; 이코드는 엔진에서 자동으로 할당합니다.
+    generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`; // Entry.lambda (익명)함수저장소
 
     // 함수를 먼저 정의합니다.
     if (ast && ast.type === "Program" && Array.isArray(ast.body)) {
