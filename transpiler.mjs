@@ -99,13 +99,13 @@ const Transpiler = async (Jsonpath, onProgress) => {
                     obj.jscript = relativeScriptPath;
 
                     const absoluteScriptPath = path.join(scriptDir, scriptFileName);
-                    return fs.promises.writeFile(absoluteScriptPath, generatedCode);
+                    fs.writeFileSync(absoluteScriptPath, generatedCode); // 동기 방식으로 변경
                 })
                 .catch(error => {
                     const errorMessage = `❌ 오브젝트 '${obj.name}' (ID: ${obj.id}) 처리 중 오류 발생: ${error.message}`;
                     if (onProgress) onProgress(errorMessage);
                     const errorStack = error.stack || error.toString();
-                    return fs.promises.writeFile(path.join(scriptDir, `object_${obj.id}.error.log`), errorStack);
+                    fs.writeFileSync(path.join(scriptDir, `object_${obj.id}.error.log`), errorStack); // 동기 방식으로 변경
                 });
         });
         //TODO:여기에 project.json 의 루트 오브젝트 functions 배열을 처리하는 걸 추가해야함 (사용자 정의 함수.)
@@ -140,19 +140,19 @@ const Transpiler = async (Jsonpath, onProgress) => {
                 // C++ 엔진에서 사용할 상대 경로. 플랫폼 간 호환성을 위해 '/'를 사용합니다.
                 const relativeScriptPath = path.join('script', scriptFileName).replace(/\\/g, '/');
  
-                return transpileInWorker(func.content, { functionId: func.id, projectFunctions: projectJson.functions }, onProgress, 5000)
+                return transpileInWorker(func.content, { functionId: func.id, objectId: undefined, projectFunctions: projectJson.functions }, onProgress, 5000)
                     .then(generatedCode => {
                         // 변환 성공 시, project.json의 함수 객체에 jscript 키와 경로를 추가합니다.
                         func.jscript = relativeScriptPath;
  
                         const absoluteScriptPath = path.join(scriptDir, scriptFileName);
-                        return fs.promises.writeFile(absoluteScriptPath, generatedCode);
+                        fs.writeFileSync(absoluteScriptPath, generatedCode); // 동기 방식으로 변경
                     })
                     .catch(error => {
                         const errorMessage = `❌ 함수 (ID: ${func.id}) 처리 중 오류 발생: ${error.message}`;
                         if (onProgress) onProgress(errorMessage);
                         const errorStack = error.stack || error.toString();
-                        return fs.promises.writeFile(path.join(scriptDir, `function_${func.id}.error.log`), errorStack);
+                        fs.writeFileSync(path.join(scriptDir, `function_${func.id}.error.log`), errorStack); // 동기 방식으로 변경
                     });
             });
             promises.push(...functionConvertPromises);
@@ -161,7 +161,7 @@ const Transpiler = async (Jsonpath, onProgress) => {
         await Promise.all(promises);
  
         // 모든 작업 완료 후, 수정된 project.json을 다시 저장합니다.
-        await fs.promises.writeFile(Jsonpath, JSON.stringify(projectJson, null, 4));
+        fs.writeFileSync(Jsonpath, JSON.stringify(projectJson, null, 4)); // 동기 방식으로 변경
         if (onProgress) {
             onProgress(`✅ project.json 파일에 변환된 스크립트 경로를 업데이트했습니다.`);
         }

@@ -131,6 +131,16 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                     if (!functionDisplayName && firstBlock.fields && firstBlock.fields.NAME && firstBlock.fields.NAME.value) {
                         functionDisplayName = firstBlock.fields.NAME.value;
                     }
+
+                    // Also try to find the name in params (for function_field_label)
+                    if (!functionDisplayName && Array.isArray(firstBlock.params)) {
+                        for (const param of firstBlock.params) {
+                            if (param && param.type === 'function_field_label' && param.params && param.params[0]) {
+                                functionDisplayName = param.params[0];
+                                break;
+                            }
+                        }
+                    }
                     
                     // Fallback to func_${funcId} if no display name is found
                     functionDisplayName = functionDisplayName || `func_${funcId}`;
