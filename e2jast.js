@@ -313,7 +313,7 @@ function codeGen(ast, objectId, projectFunctions) {
                 const funcName = `func_${node.id}`;
                 const funcRealName = node.displayName;
                 const params = node.params.join(', ');
-                generatedCode += `// this funtion ${funcRealName}`;
+                generatedCode += `// this funtion ${funcRealName}\n`;
                 generatedCode += `Entry.lambda.${funcName} = async function(${params}) {
 `;
                 // 로컬 변수 선언
