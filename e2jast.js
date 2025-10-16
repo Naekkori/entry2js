@@ -125,6 +125,16 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                     // project.json의 함수 ID가 있으면 사용하고, 없으면 스크립트 내의 ID를 사용합니다.
                     // 스크립트 내의 ID는 'l0uw'와 같은 형태일 수 있습니다.
                     const funcId = functionId || firstBlock.id;
+                    let functionDisplayName = functionNameMap.get(funcId);
+
+                    // Try to extract function name from the first block if not already found
+                    if (!functionDisplayName && firstBlock.fields && firstBlock.fields.NAME && firstBlock.fields.NAME.value) {
+                        functionDisplayName = firstBlock.fields.NAME.value;
+                    }
+                    
+                    // Fallback to func_${funcId} if no display name is found
+                    functionDisplayName = functionDisplayName || `func_${funcId}`;
+
                     const params = [];
 
                     // 함수 정의 블록의 파라미터를 재귀적으로 탐색하는 함수
@@ -162,7 +172,7 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                     programAst.body.push({
                         type: "FunctionDefinition",
                         id: funcId,
-                        displayName: functionNameMap.get(funcId) || `func_${funcId}`, // 사용자 정의 이름 추가
+                        displayName: functionDisplayName, // 사용자 정의 이름 추가
                         is_value_returning: firstBlock.type === 'function_create_value',
                         params: params,
                         body: funcBody,
