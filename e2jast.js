@@ -321,9 +321,6 @@ function codeGen(ast, objectId, projectFunctions) {
 
     // HEADER를 추가합니다.
     generatedCode += HEADER + '\n';
-    if (objectId) {
-        generatedCode += `let fe_b_thic_${toJsId(objectId).substring(4)} = 0.1;\n`;
-    }
     generatedCode += `Entry.lambda = Entry.lambda || {};\n\n`; // Entry.lambda (익명)함수저장소
 
     // 함수를 먼저 정의합니다.
