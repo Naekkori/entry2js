@@ -141,7 +141,7 @@ function buildAstFromScript(entryScript, functionId = undefined, objectId = unde
                             }
                         }
                     }
-                    
+
                     // Fallback to func_${funcId} if no display name is found
                     functionDisplayName = functionDisplayName || `func_${funcId}`;
 
@@ -622,7 +622,7 @@ const statementGenerators = {
     'change_effect_amount': createSafeStatementGenerator([0, 1], (node, indent, context, [effect, amount]) =>
         `${' '.repeat(indent)}Entry.changeEffectAmount(${effect}, ${amount});\n`
     ),
-    'erase_all_effects':(node,indent,context)=>{
+    'erase_all_effects': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.clearEffects();\n`;
     },
     // 왜 그렇게 짰는지 모르겠지만 서로 반대로 작동하도록 설계된듯.
@@ -685,7 +685,7 @@ const statementGenerators = {
         statements.forEach(stmt => {
             bodyCode += generateStatement(stmt, indent + 4, newContext);
         });
-        let code=`${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
+        let code = `${' '.repeat(indent)}for (let ${loopVar} = 0; ${loopVar} < ${count}; ${loopVar}++) {\n`;
         code += bodyCode;
 
         if (!hasAwait) {
@@ -915,7 +915,7 @@ const statementGenerators = {
     'stop_fill': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.endFill();\n`;
     },
-    'set_color': createSafeStatementGenerator([0], (node, indent, context, [color]) =>{
+    'set_color': createSafeStatementGenerator([0], (node, indent, context, [color]) => {
         return `${' '.repeat(indent)}Entry.setBrushColor(${color});\n`;
     }),
     'set_random_color': (node, indent, context) => {
@@ -930,13 +930,13 @@ const statementGenerators = {
     'set_thickness': createSafeStatementGenerator([0], (node, indent, context, [thickness]) => {
         return `${' '.repeat(indent)}Entry.setBrushThickness(${thickness});\n`;
     }),
-    'change_brush_transparency':createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
+    'change_brush_transparency': createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
         return `${' '.repeat(indent)}Entry.changeBrushTransparency(${transparency});\n`;
     }),
-    'set_brush_tranparency':createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
+    'set_brush_tranparency': createSafeStatementGenerator([0], (node, indent, context, [transparency]) => {
         return `${' '.repeat(indent)}Entry.setBrushTransparency(${transparency});\n`;
     }),
-    'brush_erase_all':(node,indent,context)=>{
+    'brush_erase_all': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.eraseAllBrush();\n`;
     },
 };
@@ -1219,7 +1219,7 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             return colorParam;
         }
         //색상피커 (추가)
-        case 'color':{
+        case 'color': {
             const PcolorParam = generateExpression(arg.arguments[0], context);
             return PcolorParam;
         }
@@ -1308,6 +1308,13 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
         case 'get_variable': {
             const varid = generateExpression(arg.arguments[0], context);
             return `Entry.variableContainer.getVariable(${varid})`;
+        }
+        //날씨 미구현
+        case 'get_korea_area_code': {
+            return `String("Not Implemented")`
+        }
+        case 'get_day_weather_data': {
+            return `String("Not Implemented")`
         }
         case 'function_param_string':
         case 'function_param_boolean': {
