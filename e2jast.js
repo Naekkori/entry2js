@@ -602,7 +602,7 @@ const statementGenerators = {
         `${' '.repeat(indent)}Entry.playSoundFromto(${soundId}, ${from}, ${to});\n`
     ),
     'locate': createSafeStatementGenerator([0], (node, indent, context, [targetObjectID]) =>
-        `${' '.repeat(indent)}Entry.locate(${targetObjectID});\n`
+        `${' '.repeat(indent)}Entry.Locate(${targetObjectID});\n`
     ),
     'bounce_wall': (node, indent, context) => {
         return `${' '.repeat(indent)}Entry.bounceWall();\n`;
