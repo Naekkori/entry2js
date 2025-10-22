@@ -1154,8 +1154,7 @@ function generateExpression(arg, context = {}, parentPrecedence = 0) {
             return 'Entry.isClicked()';
         }
         case 'is_object_clicked': {
-            const objecId = generateExpression(arg.arguments[0], context);
-            return `Entry.isObjectClicked(${objecId})`;
+            return `Entry.isObjectClicked()`;
         }
         case 'is_press_some_key': {
             const keycode = generateExpression(arg.arguments[0], context);
